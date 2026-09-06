@@ -641,6 +641,78 @@ body:has(#p-music.on) .bgm{opacity:1}
 }
 body:has(#p-people.on) .bgp{opacity:1}
 .bgp__canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+/* ==========================================================
+   ▼▼▼ 各 section 专属过场（About 对焦 / AI 扫描 / Rowing 水浪 / Music 均衡器 / People 暖光）▼▼▼
+   共用覆盖层 #fx；prefers-reduced-motion 时全部退回淡入淡出
+   ========================================================== */
+.fx{position:fixed;inset:0;z-index:900;pointer-events:none}
+.fx>div{position:absolute;inset:0;visibility:hidden}
+
+/* About：对焦淡入（模糊+放大 → 清晰） */
+.fx-focus{animation:fxFocus .58s cubic-bezier(.2,.7,.2,1) both}
+@keyframes fxFocus{from{opacity:0;filter:blur(14px);transform:scale(1.04)}to{opacity:1;filter:blur(0);transform:none}}
+
+/* AI：暗色幕布自上而下退去（只露出扫过的区域）；激光带淡绿光晕 + 二进制数字 */
+.fx__scan{background:#05070a;transform:translateY(0);will-change:transform}
+.fx__scan.run{visibility:visible;animation:fxScanPanel 1.5s cubic-bezier(.45,.02,.5,1) both}
+@keyframes fxScanPanel{from{transform:translateY(0)}to{transform:translateY(100%)}}
+/* 幕布顶缘 = 激光位置：亮线 + 上方淡绿光晕 */
+.fx__scan-edge{position:absolute;left:0;right:0;top:0;height:0}
+.fx__scan-edge::before{content:'';position:absolute;left:0;right:0;top:-2px;height:3px;
+  background:linear-gradient(90deg,transparent,var(--c-ai) 28%,#f2ffe8,var(--c-ai) 72%,transparent);
+  box-shadow:0 0 16px 3px var(--c-ai),0 0 48px 13px color-mix(in srgb,var(--c-ai) 45%,transparent)}
+.fx__scan-edge::after{content:'';position:absolute;left:0;right:0;bottom:0;height:150px;
+  background:linear-gradient(to top,color-mix(in srgb,var(--c-ai) 26%,transparent),transparent)}
+.fx__scan-digits{position:absolute;left:0;right:0;top:-32px;height:24px;overflow:hidden;
+  font:700 14px/24px "Courier New",monospace;letter-spacing:6px;
+  color:var(--c-ai);text-shadow:0 0 8px var(--c-ai);white-space:nowrap;opacity:.85}
+
+/* Rowing：船身破浪 —— 两片水面合拢盖住 → 从中缝向两侧分开，像船头破水 */
+.fx__split{visibility:hidden}
+.fx__split.on{visibility:visible}
+.fx__split .p{position:absolute;top:0;bottom:0;width:52vw;
+  background:linear-gradient(180deg,#9a2f22 0%,#5a140d 62%,#3c0d08 100%)}
+.fx__split .l{left:0;transform:translateX(-104%)}
+.fx__split .r{right:0;transform:translateX(104%)}
+/* 中缝水花高光 */
+.fx__split .p::after{content:'';position:absolute;top:0;bottom:0;width:16px}
+.fx__split .l::after{right:-1px;background:linear-gradient(90deg,transparent,rgba(255,238,232,.55))}
+.fx__split .r::after{left:-1px;background:linear-gradient(90deg,rgba(255,238,232,.55),transparent)}
+/* 合拢盖住 */
+.fx__split.close .l{animation:fxSplitCloseL .42s cubic-bezier(.4,0,.3,1) both}
+.fx__split.close .r{animation:fxSplitCloseR .42s cubic-bezier(.4,0,.3,1) both}
+@keyframes fxSplitCloseL{from{transform:translateX(-104%)}to{transform:translateX(0)}}
+@keyframes fxSplitCloseR{from{transform:translateX(104%)}to{transform:translateX(0)}}
+/* 破水分开，露出新页面 */
+.fx__split.open .l{animation:fxSplitOpenL .64s cubic-bezier(.5,0,.2,1) both}
+.fx__split.open .r{animation:fxSplitOpenR .64s cubic-bezier(.5,0,.2,1) both}
+@keyframes fxSplitOpenL{from{transform:translateX(0)}to{transform:translateX(-104%)}}
+@keyframes fxSplitOpenR{from{transform:translateX(0)}to{transform:translateX(104%)}}
+
+/* Music：声波从中心向外扩散（像音响脉冲）+ 内容随节拍亮起 */
+.fx__pulse{visibility:hidden}
+.fx__pulse.run{visibility:visible}
+.fx__pulse .ring{position:absolute;left:50%;top:47%;width:60px;height:60px;margin:-30px 0 0 -30px;
+  border:2.5px solid color-mix(in srgb,var(--c-music) 85%,transparent);border-radius:50%;
+  box-shadow:0 0 26px color-mix(in srgb,var(--c-music) 55%,transparent),
+             inset 0 0 22px color-mix(in srgb,var(--c-music) 35%,transparent);opacity:0}
+.fx__pulse.run .ring{animation:fxRing 1s ease-out both}
+.fx__pulse.run .ring:nth-child(2){animation-delay:.16s}
+.fx__pulse.run .ring:nth-child(3){animation-delay:.32s}
+@keyframes fxRing{0%{transform:scale(.15);opacity:0}14%{opacity:.85}100%{transform:scale(20);opacity:0}}
+.fx-beat{animation:fxBeat .62s cubic-bezier(.2,.8,.25,1) both}
+@keyframes fxBeat{0%{opacity:0;transform:scale(1.05)}45%{opacity:1}70%{transform:scale(.997)}100%{transform:scale(1)}}
+
+/* People：暖粉色光晕从中心绽放，内容随光亮起 */
+.fx__bloom::before{content:'';position:absolute;left:50%;top:46%;width:46vmax;height:46vmax;
+  border-radius:50%;transform:translate(-50%,-50%) scale(0);
+  background:radial-gradient(circle,color-mix(in srgb,var(--c-people) 50%,transparent) 0%,transparent 62%)}
+.fx__bloom.run{visibility:visible}
+.fx__bloom.run::before{animation:fxBloom .64s ease-out both}
+@keyframes fxBloom{0%{transform:translate(-50%,-50%) scale(0);opacity:.95}70%{opacity:.5}100%{transform:translate(-50%,-50%) scale(1.7);opacity:0}}
+.fx-bloomin{animation:fxBloomIn .6s ease-out both}
+@keyframes fxBloomIn{from{opacity:0;transform:scale(.975)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -660,6 +732,14 @@ body:has(#p-people.on) .bgp{opacity:1}
 <!-- ▼ People 的背景层（爱心+灯泡 平铺呼吸图案）。pointer-events:none，绝不拦点击 -->
 <div class="bgp" id="bgp" aria-hidden="true">
   <canvas class="bgp__canvas" id="bgpCanvas"></canvas>
+</div>
+
+<!-- ▼ 各 section 过场的覆盖层。pointer-events:none，绝不拦点击 -->
+<div class="fx" id="fx" aria-hidden="true">
+  <div class="fx__scan"><div class="fx__scan-edge"></div><div class="fx__scan-digits"></div></div>
+  <div class="fx__split"><div class="p l"></div><div class="p r"></div></div>
+  <div class="fx__pulse"></div>
+  <div class="fx__bloom"></div>
 </div>
 
 <!-- 顶部 -->
@@ -1211,59 +1291,138 @@ window.addEventListener('hashchange', function () { transitionTo(location.hash.s
 <!-- ▼▼▼ 新增：相机过场动画。上面那个 script 块完全没动 ▼▼▼ -->
 <script>
 (function () {
-  var fx   = document.getElementById('camfx');
-  var main = document.querySelector('main');
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var camfx = document.getElementById('camfx');   // 相机（Visual 专用）
+  var fxo   = document.getElementById('fx');       // 其余过场的覆盖层
+  var main  = document.querySelector('main');
+  var reduce= window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  var busy = false;          // 动画锁，防连点
-  var pending = null;        // 动画期间又点了哪一页
+  var scan   = fxo.querySelector('.fx__scan');
+  var digits = fxo.querySelector('.fx__scan-digits');
+  var split  = fxo.querySelector('.fx__split');
+  var pulse  = fxo.querySelector('.fx__pulse');
+  var bloom  = fxo.querySelector('.fx__bloom');
+  for (var i = 0; i < 3; i++) pulse.appendChild(document.createElement('div')).className = 'ring';
+
+  function randBits(n) { var s = ''; for (var k = 0; k < n; k++) s += (Math.random() < 0.5 ? '0' : '1'); return s; }
+
+  var busy = false, pending = null;
+
+  // 收尾：解锁；若过场期间地址栏又被改过（中途点了别的导航）就对齐
+  function finish(hs) {
+    busy = false;
+    var now = location.hash.slice(1);
+    var showing = document.querySelector('.page.on');
+    if (now && now !== hs && showing && showing.id !== 'p-' + now) show(now);
+    pending = null;
+  }
+
+  // 普通淡入淡出（降级 + 兜底）
+  function fadeSwap(id, hs) {
+    main.classList.add('camfx-fade');
+    setTimeout(function () {
+      show(pending || id);
+      main.classList.remove('camfx-fade');
+      finish(hs);
+    }, 200);
+  }
+
+  // Visual：相机快门（沿用原时序）
+  function camera(id, hs) {
+    camfx.classList.remove('is-on'); document.body.classList.remove('camfx-blow');
+    void camfx.offsetWidth;
+    camfx.classList.add('is-on'); document.body.classList.add('camfx-blow');
+    setTimeout(function () { show(pending || id); }, 1325);
+    setTimeout(function () {
+      camfx.classList.remove('is-on'); document.body.classList.remove('camfx-blow');
+      finish(hs);
+    }, 1700);
+  }
+
+  // About：对焦淡入
+  function aboutFocus(id, hs) {
+    main.classList.add('camfx-fade');
+    setTimeout(function () {
+      show(pending || id);
+      main.classList.remove('camfx-fade');
+      main.classList.add('fx-focus');
+      setTimeout(function () { main.classList.remove('fx-focus'); finish(hs); }, 600);
+    }, 150);
+  }
+
+  // AI：暗幕自上而下退去（只露出扫过的区域），激光带光晕 + 二进制数字
+  function aiScan(id, hs) {
+    scan.classList.remove('run'); void scan.offsetWidth;
+    scan.classList.add('run');                  // 先盖住（from translateY 0）
+    show(pending || id);                        // 幕布之下切到新页
+    digits.textContent = randBits(240);
+    var di = setInterval(function () { digits.textContent = randBits(240); }, 55);
+    setTimeout(function () {
+      scan.classList.remove('run');
+      clearInterval(di); digits.textContent = '';
+      finish(hs);
+    }, 1500);
+  }
+
+  // Rowing：船身破浪 —— 合拢盖住 → 从中缝破水分开
+  function rowingSplit(id, hs) {
+    split.classList.remove('open');
+    split.classList.add('on', 'close');
+    setTimeout(function () {                      // 已合拢盖住
+      show(pending || id);                        // 幕后切到新页
+      split.classList.remove('close'); void split.offsetWidth;
+      split.classList.add('open');                // 破水分开
+    }, 430);
+    setTimeout(function () {
+      split.classList.remove('on', 'open');
+      finish(hs);
+    }, 1090);
+  }
+
+  // Music：声波从中心向外扩散 + 内容随节拍亮起
+  function musicPulse(id, hs) {
+    main.classList.add('camfx-fade');
+    setTimeout(function () {
+      show(pending || id);
+      main.classList.remove('camfx-fade');
+      main.classList.add('fx-beat');
+      pulse.classList.remove('run'); void pulse.offsetWidth;
+      pulse.classList.add('run');
+      setTimeout(function () {
+        pulse.classList.remove('run'); main.classList.remove('fx-beat'); finish(hs);
+      }, 1050);
+    }, 140);
+  }
+
+  // People：暖光绽放
+  function peopleBloom(id, hs) {
+    main.classList.add('camfx-fade');
+    setTimeout(function () {
+      show(pending || id);
+      main.classList.remove('camfx-fade');
+      main.classList.add('fx-bloomin');
+      bloom.classList.add('run');
+      setTimeout(function () { bloom.classList.remove('run'); main.classList.remove('fx-bloomin'); finish(hs); }, 640);
+    }, 150);
+  }
 
   window.transitionTo = function (targetId) {
     var id = targetId || 'about';
-
-    // 已经在这一页就别放动画了
     var cur = document.querySelector('.page.on');
-    if (cur && cur.id === 'p-' + id) return;
+    if (cur && cur.id === 'p-' + id) return;         // 已在这一页
+    if (busy) { pending = id; return; }              // 过场中：记下最新目标
+    busy = true; pending = id;
+    var hs = location.hash.slice(1);
 
-    // 动画进行中又点了别的：不再无视这 2.5 秒里的所有点击，
-    // 而是记下最新的目标，等换内容那一刻直接切到它去
-    if (busy) { pending = id; return; }
-    busy = true;
-    pending = id;
-
-    // —— 降级：不放相机，只做淡入淡出 ——
-    if (reduce.matches) {
-      main.classList.add('camfx-fade');
-      setTimeout(function () {
-        show(id);                                  // 调用你原有的 show()
-        main.classList.remove('camfx-fade');
-        busy = false;
-      }, 180);
-      return;
+    if (reduce.matches) return fadeSwap(id, hs);     // 要求减少动效：一律淡入淡出
+    switch (id) {
+      case 'visual': return camera(id, hs);
+      case 'about':  return aboutFocus(id, hs);
+      case 'ai':     return aiScan(id, hs);
+      case 'rowing': return rowingSplit(id, hs);
+      case 'music':  return musicPulse(id, hs);
+      case 'people': return peopleBloom(id, hs);
+      default:       return fadeSwap(id, hs);
     }
-
-    // —— 正常：2.5s 相机过场 ——
-    var hashAtStart = location.hash.slice(1);      // 记下开始时的地址栏
-
-    fx.classList.remove('is-on');
-    document.body.classList.remove('camfx-blow');
-    void fx.offsetWidth;                           // 强制回流，让动画能重复触发
-    fx.classList.add('is-on');
-    document.body.classList.add('camfx-blow');     // ③ 同时启动内容过曝
-
-    setTimeout(function () { show(pending || id); }, 1325);   // 用最新目标；1290ms 涨满、1360ms 才开始衰减，1325 稳在正中
-
-    setTimeout(function () {
-      fx.classList.remove('is-on');
-      document.body.classList.remove('camfx-blow');
-      busy = false;
-      // 只有"动画期间地址栏又被改过"才需要对齐（说明中途点了别的导航）。
-      // 直接用 transitionTo('xxx') 调用、地址栏没变的情况不会被误改回去。
-      var now = location.hash.slice(1);
-      var showing = document.querySelector('.page.on');
-      if (now && now !== hashAtStart && showing && showing.id !== 'p-' + now) show(now);
-      pending = null;
-    }, 1700);
   };
 })();
 </script>
