@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>William Wang — Portfolio</title>
 
+<!-- About Room 用到的像素字 + 衬线字 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
 <!--
   个人主页 v4 · 单文件 · 白底极简 · 分页
   首页是 About me，其余每个 section 单独占一页，由顶部导航切换。
@@ -111,9 +116,7 @@ nav a[href="#people"]:hover,nav a[href="#people"].on{color:var(--c-people)}
 
 /* 导航项两侧的方括号：用伪元素，HTML 里不用改。
    想换成圆括号就把 [ ] 改成 ( ) */
-nav a::before{content:'[ '}
-nav a::after {content:' ]'}
-nav a::before,nav a::after{color:var(--muted)}
+/* 方括号已去掉（改版：导航改为大写小字导航栏，不再用 [ ] 包裹） */
 /* 括号跟着链接自己的颜色走，不用再逐个写一遍 */
 nav a:hover::before,nav a:hover::after,
 nav a.on::before,nav a.on::after{color:inherit}
@@ -153,6 +156,16 @@ h2{
 }
 .avatar img{width:100%;height:auto}
 @media(max-width:600px){ .avatar{width:88%} }   /* 手机上放大一点 */
+
+/* About 首屏：照片在左、文字在右，更紧凑，让下面的卡片更快露出来 */
+.about-hero{display:grid;gap:clamp(22px,3.5vw,44px);align-items:center;text-align:left;
+  margin-bottom:clamp(8px,1.5vw,18px)}
+@media(min-width:700px){ .about-hero{grid-template-columns:0.78fr 1.22fr} }
+.about-hero .avatar{width:100%;margin:0}
+.about-hero .avatar img{border-radius:8px}
+.about-hero__text{align-self:center}
+.about-hero__text h2{text-align:left;margin:0 0 clamp(12px,1.6vw,18px)}
+.about-hero__text .handbody{width:100%;max-width:100%;margin:0}
 
 /* About：一句一行、居中（对应你原稿的排版） */
 .lines{max-width:none}
@@ -752,6 +765,296 @@ body:has(#p-people.on) .bgp{opacity:1}
 @keyframes fxBloom{0%{transform:translate(-50%,-50%) scale(0);opacity:.95}70%{opacity:.5}100%{transform:translate(-50%,-50%) scale(1.7);opacity:0}}
 .fx-bloomin{animation:fxBloomIn .6s ease-out both}
 @keyframes fxBloomIn{from{opacity:0;transform:scale(.975)}to{opacity:1;transform:none}}
+/* ============================================================
+   ▼▼▼ 首页重构（handoff-to-claude-code）：Hero / 固定导航 / 手写独占屏 /
+        编辑式索引 / footer。只影响首页与全局 chrome，不改子页面内容。 ▼▼▼
+   ============================================================ */
+
+/* 旧的顶部大 wordmark 区块弃用 */
+.masthead{display:none}
+
+/* 固定顶栏：初始透明，滚动后加磨砂底 */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:60;
+  display:flex;align-items:center;justify-content:space-between;
+  height:54px;padding:0 clamp(18px,4vw,40px);text-align:left;
+  background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;
+  transition:background .4s ease,backdrop-filter .4s ease;
+}
+nav.solid{background:rgba(10,10,10,.72);
+  backdrop-filter:blur(12px) saturate(120%);-webkit-backdrop-filter:blur(12px) saturate(120%)}
+.nav__brand{
+  font-family:'Moralana',"Snell Roundhand","Brush Script MT",cursive;
+  font-size:22px;font-weight:400;letter-spacing:0;color:#fff;text-decoration:none;
+  opacity:0;transform:translateY(-2px);pointer-events:none;
+  transition:opacity .45s ease,transform .45s ease;
+}
+nav.solid .nav__brand{opacity:1;transform:none;pointer-events:auto}
+.nav__links{display:flex;gap:clamp(11px,1.7vw,26px);align-items:center;flex-wrap:nowrap}
+.nav__links a{
+  font-size:13px;letter-spacing:.09em;text-transform:uppercase;
+  color:rgba(255,255,255,.6);text-decoration:none;padding:6px 0;position:relative;white-space:nowrap;
+  transition:color .3s ease;
+}
+.nav__links a::after{content:'';position:absolute;left:0;right:100%;bottom:1px;height:1px;
+  background:currentColor;transition:right .3s ease}
+.nav__links a:hover{color:#fff}
+.nav__links a:hover::after{right:0}
+/* 汉堡菜单：仅移动端 */
+.nav__toggle{display:none}
+@media(max-width:699px){
+  .nav__toggle{display:flex;flex-direction:column;justify-content:center;gap:5px;
+    width:36px;height:36px;margin-left:auto;padding:0;background:none;border:0;cursor:pointer;z-index:2}
+  .nav__toggle span{display:block;width:22px;height:2px;background:#fff;transition:transform .3s ease,opacity .3s ease}
+  nav.open .nav__toggle span:nth-child(1){transform:translateY(3.5px) rotate(45deg)}
+  nav.open .nav__toggle span:nth-child(2){transform:translateY(-3.5px) rotate(-45deg)}
+  .nav__links{position:fixed;top:54px;left:0;right:0;flex-direction:column;align-items:flex-start;gap:0;
+    background:rgba(10,10,10,.96);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    padding:6px clamp(18px,5vw,32px) 18px;
+    transform:translateY(-14px);opacity:0;pointer-events:none;transition:transform .3s ease,opacity .3s ease}
+  nav.open .nav__links{transform:none;opacity:1;pointer-events:auto}
+  .nav__links a{width:100%;padding:13px 0;font-size:15px;letter-spacing:.06em}
+}
+
+/* 子页面内容要避开固定导航 */
+.page{padding-top:clamp(86px,11vh,120px)}
+#p-about{padding-top:0}
+
+/* —— 1. Hero 全出血 —— */
+.hero{position:relative;height:100vh;height:100svh;overflow:hidden;display:flex;align-items:flex-end}
+.hero__bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  transform:scale(1.06);animation:heroZoom 22s ease-out forwards}
+@keyframes heroZoom{from{transform:scale(1.09)}to{transform:scale(1.0)}}
+.hero__grad{position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.15) 45%,rgba(0,0,0,.85))}
+.hero__inner{position:relative;z-index:2;width:100%;max-width:1100px;margin:0 auto;
+  padding:0 clamp(20px,4vw,40px) clamp(56px,12vh,120px);text-align:left}
+.hero__name{margin:0;font-weight:400;letter-spacing:0;color:#fff;line-height:1;
+  font-family:'Moralana',"Snell Roundhand","Brush Script MT",cursive;
+  font-size:clamp(56px,9vw,140px)}
+.hero__sub{display:block;width:min(78%,540px);height:auto;margin-top:clamp(12px,2vw,22px);
+  filter:drop-shadow(0 1px 4px rgba(0,0,0,.7))}
+.hero__scroll{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:2;
+  color:#fff;opacity:.5;font-size:22px;text-decoration:none;line-height:1;
+  animation:heroBob 2.2s ease-in-out infinite}
+@keyframes heroBob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,7px)}}
+
+/* 中间内容统一容器 + 段落节奏 */
+.home-block{max-width:1100px;margin:clamp(120px,14vh,200px) auto 0;padding:0 clamp(20px,4vw,40px)}
+
+/* —— 3. 手写自我介绍独占一屏 —— */
+.home-intro{text-align:center;padding:clamp(30px,7vh,90px) 0}
+.home-intro__hand{width:100%;max-width:900px;height:auto;margin:0 auto;
+  opacity:0;transform:translateY(14px);transition:opacity .7s ease,transform .7s ease;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
+.home-intro__hand.in{opacity:1;transform:none}
+
+/* —— 4. Explore 编辑式索引 —— */
+.explore-head{margin-bottom:clamp(24px,3.5vw,44px);text-align:left}
+.explore-title{margin:0;color:var(--c-about);text-align:left;
+  font-family:var(--font-title);font-weight:500;font-size:clamp(28px,4vw,44px)}
+.explore-note{margin:8px 0 0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.index{display:grid;gap:clamp(12px,1.4vw,20px)}
+.index--top{grid-template-columns:2fr 1fr}
+.index--bottom{grid-template-columns:repeat(3,1fr);margin-top:clamp(12px,1.4vw,20px)}
+.tile{position:relative;display:block;overflow:hidden;text-decoration:none;background:var(--fill)}
+.tile--lg,.tile--md{height:min(70vh,620px)}
+.tile--sm{height:min(40vh,360px)}
+.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  filter:brightness(.7);transition:transform .6s cubic-bezier(.2,.8,.2,1),filter .6s ease}
+.tile::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.72))}
+.tile__cap{position:absolute;left:clamp(16px,1.6vw,26px);right:14px;bottom:clamp(14px,1.6vw,22px);z-index:2}
+.tile__name{margin:0;color:#fff;font-family:var(--font-title);font-weight:500;
+  font-size:clamp(20px,2.2vw,28px);display:flex;align-items:center;gap:10px}
+.tile__name .arw{opacity:0;transform:translateX(-6px);font-weight:400;
+  transition:opacity .4s ease,transform .4s ease}
+.tile__meta{margin:6px 0 0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.62)}
+.tile:hover img{transform:scale(1.04);filter:brightness(.86)}
+.tile:hover .tile__name .arw{opacity:1;transform:translateX(0)}
+.tile:focus-visible{outline:2px solid rgba(255,255,255,.75);outline-offset:-2px}
+@media(max-width:699px){
+  .index--top,.index--bottom{grid-template-columns:1fr}
+  .index--bottom{margin-top:clamp(12px,1.4vw,20px)}
+  .tile--lg,.tile--md,.tile--sm{height:48vh}
+}
+
+/* —— 5. Footer —— */
+.footer__closer{display:block;width:min(72%,420px);height:auto;margin:0 auto clamp(24px,4vw,38px);opacity:.9}
+.footer__links{display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(16px,3vw,34px);
+  font-size:14px;letter-spacing:.04em}
+.footer__links a{color:rgba(255,255,255,.72);text-decoration:none;transition:color .3s ease}
+.footer__links a:hover{color:#fff}
+
+/* ============================================================
+   ▼▼▼ 子页面改版（2-子页面改版.md）：章节封面标题 + 各页专属组件 ▼▼▼
+   ============================================================ */
+/* 章节封面式大标题（左对齐）+ 元信息 */
+.sec-title{text-align:left;font-size:clamp(40px,6vw,88px);line-height:1.03;margin:0}
+.sec-meta{margin:14px 0 clamp(30px,4vw,52px);font-size:13px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);text-align:left}
+.sec-lead{text-align:left;max-width:60ch;margin:0 0 clamp(30px,4vw,48px)}
+.sec-lead .intro{max-width:none;margin:0 0 .5em;text-align:left}
+
+/* 成果数字（AI / Rowing） */
+.stats{display:grid;gap:clamp(20px,3vw,40px);margin:0 0 clamp(44px,6vw,72px);max-width:none;
+  grid-template-columns:repeat(3,1fr);text-align:left}
+@media(max-width:600px){.stats{grid-template-columns:1fr;gap:22px}}
+.stats b{display:block;font-family:var(--font-title);font-weight:500;line-height:1;
+  font-size:clamp(38px,5vw,54px);color:var(--ink)}
+.stats span{display:block;margin-top:8px;font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted)}
+
+/* AI 折叠盒：只留上分隔线 + 左侧大编号 */
+.boxes{margin-top:clamp(20px,3vw,36px)}
+.box{border:0;border-top:1px solid var(--line);margin:0}
+.box:last-child{border-bottom:1px solid var(--line)}
+.box summary{justify-content:flex-start;align-items:baseline;gap:clamp(14px,2vw,26px);
+  padding:22px 2px;font-weight:500;font-size:clamp(16px,1.7vw,18px)}
+.box__num{font-family:var(--font-title);font-size:clamp(20px,2vw,26px);color:var(--ink);
+  opacity:.32;flex:none;min-width:2ch}
+.box summary .box__t{flex:1}
+.box[open] summary{border-bottom:0}
+.box__body{padding:0 2px 26px calc(2ch + clamp(14px,2vw,26px))}
+
+/* 论文：首页截图 + 链接（不再嵌 PDF 大灰框） */
+.paper-card{margin:14px 0 0}
+.paper-card img{width:100%;max-width:400px;height:auto;display:block;border:1px solid var(--line)}
+.paper-open{display:inline-block;margin-top:14px;color:var(--accent);text-decoration:none;
+  font-size:14px;border-bottom:1px solid transparent;transition:border-color .3s ease}
+.paper-open:hover{border-bottom-color:var(--accent)}
+
+/* senior 项目照片：首图跨两列 + 后两张并排 */
+.stack{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0 0}
+.stack figure{margin:0}
+.stack figure:first-child{grid-column:1 / -1}
+.stack img{width:100%;height:auto;display:block;border:1px solid var(--line)}
+
+/* ============================================================
+   ▼▼▼ About Room（v2 像素房间）：入场存档卡 → 房间 → 物件热区 → 弹层 → 跳转 section
+   ============================================================ */
+@keyframes ants   { to { stroke-dashoffset: -16; } }
+@keyframes tw     { 0%,100% { opacity:.95; } 50% { opacity:.1; } }
+@keyframes caret  { 0%,49% { opacity:1; } 50%,100% { opacity:0; } }
+@keyframes f4     { 0%,24.99% { opacity:1; } 25%,100% { opacity:0; } }
+@keyframes gM { 0%,100%{filter:drop-shadow(0 0 3px rgba(221,127,99,.25)) drop-shadow(0 0 8px rgba(221,127,99,.12));} 50%{filter:drop-shadow(0 0 6px rgba(221,127,99,1)) drop-shadow(0 0 17px rgba(221,127,99,.7));} }
+@keyframes gP { 0%,100%{filter:drop-shadow(0 0 3px rgba(184,146,221,.25)) drop-shadow(0 0 8px rgba(184,146,221,.12));} 50%{filter:drop-shadow(0 0 6px rgba(184,146,221,1)) drop-shadow(0 0 17px rgba(184,146,221,.7));} }
+@keyframes gR { 0%,100%{filter:drop-shadow(0 0 3px rgba(106,169,221,.25)) drop-shadow(0 0 8px rgba(106,169,221,.12));} 50%{filter:drop-shadow(0 0 6px rgba(106,169,221,1)) drop-shadow(0 0 17px rgba(106,169,221,.7));} }
+@keyframes gA { 0%,100%{filter:drop-shadow(0 0 3px rgba(90,214,192,.25)) drop-shadow(0 0 8px rgba(90,214,192,.12));} 50%{filter:drop-shadow(0 0 6px rgba(90,214,192,1)) drop-shadow(0 0 17px rgba(90,214,192,.7));} }
+@keyframes gV { 0%,100%{filter:drop-shadow(0 0 3px rgba(224,177,90,.3)) drop-shadow(0 0 9px rgba(224,177,90,.16));} 50%{filter:drop-shadow(0 0 8px rgba(255,205,120,1)) drop-shadow(0 0 22px rgba(224,177,90,.85));} }
+@keyframes wipe   { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes lineIn { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:none; } }
+@keyframes bootBar{ from { width:0; } to { width:100%; } }
+
+#p-about.page{padding-top:0}
+.room{position:relative;min-height:100vh;min-height:100svh;display:grid;place-items:center;background:#08070e;color:#efe9dc;font-family:'EB Garamond',Georgia,serif;overflow:hidden}
+.room__stage{position:relative;width:min(100%,177.78vh);aspect-ratio:16/9;overflow:hidden;background:#1d1833}
+.room .px{image-rendering:pixelated}
+.room__stage rect[id^="rmHot"]{cursor:pointer}
+
+/* 弹层 */
+.room__modal{position:absolute;inset:0;background:rgba(7,6,13,.93);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);display:grid;place-items:center;padding:clamp(12px,3vw,48px);z-index:5}
+.room__modal[hidden]{display:none}
+.room__panel{position:relative;width:100%;max-width:1060px;max-height:100%;overflow:auto;background:#15121f;box-shadow:0 0 0 3px #5ad6c0,0 0 0 7px #0b0a14,0 30px 80px rgba(0,0,0,.6)}
+.room__x{appearance:none;background:none;border:1px solid rgba(239,233,220,.22);color:#efe9dc;font-family:'Press Start 2P',monospace;font-size:10px;width:30px;height:30px;cursor:pointer;line-height:1}
+.room__x:hover{background:rgba(239,233,220,.12)}
+.room__nav{appearance:none;background:none;border:1px solid rgba(239,233,220,.22);color:#efe9dc;font-family:inherit;font-size:inherit;letter-spacing:inherit;padding:10px 14px;cursor:pointer}
+.room__nav:hover{background:rgba(239,233,220,.12)}
+.room__open{color:#5ad6c0;text-decoration:none;padding:10px 0}
+.room__open:hover{text-decoration:underline}
+.room__body p{margin:0}
+
+/* 入场存档卡 */
+.room__intro{position:absolute;inset:0;z-index:8;background:#08070e;display:grid;place-items:center;padding:clamp(16px,3vw,56px);cursor:pointer;opacity:1;transition:opacity .5s ease}
+.room__intro.gone{opacity:0;pointer-events:none}
+.room__save{width:100%;max-width:1060px;max-height:100%;overflow:auto;background:#15121f;box-shadow:0 0 0 3px #2a2440,0 0 0 7px #0b0a14}
+
+/* 物件悬停气泡：鼠标移到物件上，就在物件旁弹出一个说明它是哪个板块的对话框 */
+.room__tip{position:absolute;z-index:4;pointer-events:none;
+  background:rgba(10,8,18,.92);border:1px solid var(--tip,#b3a6d6);
+  padding:9px 12px;text-align:center;opacity:0;transition:opacity .14s ease;
+  font-family:'Press Start 2P',monospace}
+.room__tip.show{opacity:1}
+.room__tip b{display:block;font-size:clamp(8px,.85vw,11px);letter-spacing:.05em;
+  line-height:1.5;color:var(--tip,#efe9dc);text-shadow:0 1px 0 #000;white-space:nowrap}
+.room__tip span{display:block;margin-top:7px;font-size:6px;letter-spacing:.14em;color:#8f86b5}
+.room__tip::after{content:'';position:absolute;left:50%;margin-left:-4px;width:8px;height:8px;
+  background:rgba(10,8,18,.92)}
+.room__tip[data-pos="above"]::after{bottom:-5px;border-right:1px solid var(--tip,#b3a6d6);
+  border-bottom:1px solid var(--tip,#b3a6d6);transform:rotate(45deg)}
+.room__tip[data-pos="below"]::after{top:-5px;border-left:1px solid var(--tip,#b3a6d6);
+  border-top:1px solid var(--tip,#b3a6d6);transform:rotate(45deg)}
+
+/* 房间页隐藏顶栏（沉浸），其余 section 恢复 */
+nav.nav--hide{opacity:0;pointer-events:none;transition:opacity .4s ease}
+
+/* ============================================================
+   ▼▼▼ 五个 section 换成像素 / 房间风格：像素字标题 + 元信息，正文衬线，诗手写；
+        过场动画 + 背景动画都不动（section 不设背景，露出固定背景层）。 ▼▼▼
+   ============================================================ */
+/* 顶部导航整条去掉，改用右上角「回到房间」按钮 */
+nav{display:none !important}
+
+/* 每页一个房间同款 accent */
+#p-ai{--acc:#5ad6c0}
+#p-visual{--acc:#e0b15a}
+#p-rowing{--acc:#6aa9dd}
+#p-music{--acc:#dd7f63}
+#p-people{--acc:#b892dd}
+
+/* 正文：换成清爽等宽字（IBM Plex Mono），比衬线/手写好读，仍贴合房间的「电脑/终端」味 */
+#p-ai,#p-visual,#p-rowing,#p-music,#p-people{font-family:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace}
+#p-ai p,#p-visual p,#p-rowing p,#p-music p,#p-people p{
+  font-family:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;letter-spacing:0}
+
+/* 大标题 → 像素字（尺寸收敛，像素字很宽），accent 上色 + 像素描边阴影 */
+#p-ai h2,#p-visual h2,#p-rowing h2,#p-music h2,#p-people h2{
+  font-family:'Press Start 2P',monospace;font-weight:400;line-height:1.5;letter-spacing:.01em;
+  font-size:clamp(15px,2.7vw,32px);color:var(--acc);text-shadow:0 2px 0 #000;margin-bottom:.9em}
+/* 二级标题 / 人名 / PTV 小标题 → 像素字，小一号 */
+#p-ai h3,#p-visual h3,#p-rowing h3,#p-music h3,#p-people h3,
+#p-visual .subhead-ptv{
+  font-family:'Press Start 2P',monospace;font-weight:400;line-height:1.6;letter-spacing:.03em;
+  font-size:clamp(11px,1.5vw,17px);color:#efe9dc}
+
+/* 元信息 / 标签 / credit / 论文链接 → 像素字，极小 */
+#p-ai .sec-meta,#p-visual .ptv-meta,
+#p-ai .box__num,#p-ai .stats span,#p-music .credit,#p-ai .paper-open{
+  font-family:'Press Start 2P',monospace;letter-spacing:.1em;line-height:1.8}
+#p-ai .sec-meta{color:var(--acc)}
+#p-ai .box__num{color:var(--acc);opacity:.9}
+#p-ai .stats span{font-size:8px;color:#8f86b5}
+#p-music .credit{font-size:9px;color:#8f86b5;opacity:.85}
+#p-ai .paper-open{color:var(--acc)}
+
+/* AI 折叠盒标题 → 等宽字（比像素字好读），编号仍用像素字 */
+#p-ai .box summary{align-items:baseline}
+#p-ai .box__t{font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;font-weight:500;
+  font-size:clamp(13px,1.2vw,15px);line-height:1.55;letter-spacing:0}
+#p-ai .box{border-top:1px solid rgba(239,233,220,.16)}
+#p-ai .box:last-child{border-bottom:1px solid rgba(239,233,220,.16)}
+/* AI 成果数字 → 像素字，accent */
+#p-ai .stats b{font-family:'Press Start 2P',monospace;font-weight:400;
+  font-size:clamp(18px,2.4vw,30px);line-height:1.3;color:var(--acc)}
+
+/* Music 手风琴按钮 → 像素字 */
+#p-music .artist-head{font-family:'Press Start 2P',monospace;font-weight:400;
+  font-size:clamp(11px,1.4vw,16px);letter-spacing:.03em;line-height:1.6;color:#efe9dc}
+#p-music .music-col.is-open .artist-head{color:var(--acc)}
+
+/* 诗 + 歌词 → 等宽字斜体（当引文用，好读又有区分度） */
+#p-visual .lede--poem,#p-rowing .lede--poem,#p-music .verse{
+  font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;font-style:italic;letter-spacing:0}
+
+/* 右上角「回到房间」按钮（替代导航） */
+#toRoom{position:fixed;top:calc(env(safe-area-inset-top,0px) + clamp(12px,2vw,22px));
+  right:clamp(12px,2vw,22px);z-index:60;appearance:none;cursor:pointer;
+  font-family:'Press Start 2P',monospace;font-size:clamp(7px,.7vw,10px);letter-spacing:.1em;
+  color:#efe9dc;background:rgba(10,8,18,.82);border:1px solid rgba(239,233,220,.28);
+  padding:11px 14px;line-height:1;transition:background .25s ease,border-color .25s ease}
+#toRoom:hover{background:rgba(239,233,220,.12);border-color:rgba(239,233,220,.5)}
+#toRoom[hidden]{display:none}
+
 </style>
 </head>
 <body>
@@ -782,130 +1085,291 @@ body:has(#p-people.on) .bgp{opacity:1}
 </div>
 
 <!-- 顶部 -->
-<header class="masthead">
-  <h1><a href="#about">William Wang</a></h1>
-</header>
 <nav>
-  <a href="#about">About</a>
-  <a href="#ai">AI &amp; Society</a>
-  <a href="#visual">Visual</a>
-  <a href="#rowing">Rowing</a>
-  <a href="#music">Music</a>
-  <a href="#people">People</a>
+  <a class="nav__brand" href="#about">William Wang</a>
+  <button class="nav__toggle" type="button" aria-label="Menu" aria-expanded="false"><span></span><span></span></button>
+  <div class="nav__links">
+    <a href="#about">About</a>
+    <a href="#ai">AI &amp; Society</a>
+    <a href="#visual">Visual</a>
+    <a href="#rowing">Rowing</a>
+    <a href="#music">Music</a>
+    <a href="#people">People</a>
+  </div>
 </nav>
+
+<!-- 右上角「回到房间」按钮：关闭当前 section，回到桌面场景（替代导航） -->
+<button id="toRoom" type="button" hidden>&lt; BACK TO THE ROOM</button>
 
 <main>
 
 <!-- About -->
 <section id="p-about" class="page on">
-  <div class="wrap">
-    <figure class="avatar">
-      <img src="照片素材/about%20me/about%20me.jpg" alt="William Wang">
-    </figure>
 
-    <h2>About me:</h2>
-    <img class="handbody" style="max-width:880px" src="照片素材/handwriting/about.png" alt="I am William Wang, you can call me by my hobbit name: Wiseman. I am multifaceted: I love sports, I love arts, I love research. I've been exploring who I am in the past few years. I am an extrovert but love to daydream and ponder. I want to plan everything out but am willing to let things flow. I follow my heart but also keep my head. Anyways, lovely to meet you!">
+  <!-- ▼ About Room（v2 像素房间）：存档卡 → 房间 → 物件热区 → 弹层 → 跳转 section -->
+  <div class="room" id="room">
+    <div class="room__stage" id="rmStage">
 
-    <p class="home-explore">Explore my world ↓ (tap a photo)</p>
-    <div class="home-cards">
+      <!-- 墙 + 桌面底板 -->
+      <img class="px" src="room/pixel/background.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill">
 
-      <!-- AI & Society：手写放在合照上方的空白处 -->
-      <a class="home-card" href="#ai" style="--cc:var(--c-ai)">
-        <img src="AI%20society/senior%20citizen%20program/web/sc01.jpg" alt="AI &amp; Society" loading="lazy">
-        <svg class="doodle" style="--rot:-10deg;top:12px;right:12px;width:34px" viewBox="0 0 40 40"><path d="M20 3c1.6 9 5 12.4 14 14-9 1.6-12.4 5-14 14-1.6-9-5-12.4-14-14 9-1.6 12.4-5 14-14Z" fill="#fff"/></svg>
-        <div class="home-card__cap">
-          <img class="home-card__hand" src="照片素材/handwriting/ai.png" alt="Grandparents are so kind and easy-going" loading="lazy">
-          <span class="home-card__label">AI &amp; Society<span class="arw">&rarr;</span></span>
+      <!-- 台灯光晕 + 墙上小架 -->
+      <svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid meet" style="position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none">
+        <g style="opacity:1">
+          <polygon points="14,30 40,30 128,144 0,144" fill="#ffcf8a" opacity=".12"></polygon>
+          <ellipse cx="62" cy="130" rx="74" ry="18" fill="#ffcf8a" opacity=".1"></ellipse>
+        </g>
+        <rect x="104" y="22" width="128" height="100" fill="#4fd6c8" opacity=".05"></rect>
+        <rect x="240" y="40" width="70" height="3" fill="#6b4a2e"></rect>
+        <rect x="240" y="40" width="70" height="1" fill="#8a6240"></rect>
+        <rect x="240" y="43" width="70" height="1" fill="#3a2919"></rect>
+        <polygon points="246,44 254,44 246,52" fill="#4a3423"></polygon>
+        <polygon points="296,44 304,44 304,52" fill="#4a3423"></polygon>
+      </svg>
+
+      <!-- 物件像素图 -->
+      <img class="px" src="room/pixel/window-t.png" alt="" style="position:absolute;left:13.75%;top:4.44%;width:25%;height:45.56%">
+      <img class="px" src="room/pixel/lamp-t.png" alt="" style="position:absolute;left:0;top:6.67%;width:11.88%;height:57.78%">
+      <img class="px" src="room/pixel/boat-t.png" alt="" style="position:absolute;left:70.63%;top:16.67%;width:28.75%;height:7.56%;animation:gR 2.8s ease-in-out 1.8s infinite">
+      <img class="px" src="room/pixel/turntable-t.png" alt="" style="position:absolute;left:15%;top:56.67%;width:18.75%;height:12.96%;animation:gM 2.8s ease-in-out infinite">
+      <div style="position:absolute;left:18.36%;top:58.19%;width:11.56%;height:5.83%">
+        <img class="px" src="room/pixel/vinyl-1.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;animation:f4 1.1s steps(1) infinite">
+        <img class="px" src="room/pixel/vinyl-2.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;animation:f4 1.1s steps(1) -.275s infinite">
+        <img class="px" src="room/pixel/vinyl-3.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;animation:f4 1.1s steps(1) -.55s infinite">
+        <img class="px" src="room/pixel/vinyl-4.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;animation:f4 1.1s steps(1) -.825s infinite">
+      </div>
+      <img class="px" src="room/pixel/pics-t.png" alt="" style="position:absolute;left:67.5%;top:51.11%;width:12.5%;height:22.78%;animation:gP 2.8s ease-in-out 1.2s infinite">
+      <img class="px" src="room/pixel/coffee-t.png" alt="" style="position:absolute;left:85%;top:57.78%;width:7.5%;height:18.89%">
+
+      <!-- 夜空星点 -->
+      <svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid meet" style="position:absolute;inset:0;width:100%;height:100%;display:block;shape-rendering:crispEdges;pointer-events:none">
+        <g fill="#dbe6ff">
+          <rect x="71" y="33" width="1" height="1" style="animation:tw 3.1s steps(2) infinite"></rect>
+          <rect x="78" y="36" width="1" height="1" style="animation:tw 2.3s steps(2) .4s infinite"></rect>
+          <rect x="74" y="41" width="1" height="1" style="animation:tw 4.2s steps(2) .9s infinite"></rect>
+          <rect x="88" y="31" width="1" height="1" style="animation:tw 2.7s steps(2) 1.4s infinite"></rect>
+          <rect x="89" y="43" width="1" height="1" style="animation:tw 3.6s steps(2) 1.9s infinite"></rect>
+        </g>
+      </svg>
+
+      <!-- 显示器（AI，SVG 手绘） -->
+      <svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid meet" style="position:absolute;inset:0;width:100%;height:100%;display:block;shape-rendering:crispEdges;pointer-events:none;animation:gA 2.8s ease-in-out .6s infinite">
+        <g transform="translate(0,-8)">
+        <rect x="118" y="32" width="100" height="74" fill="#1b1a24"></rect>
+        <rect x="118" y="32" width="100" height="2" fill="#2b2a38"></rect>
+        <rect x="122" y="36" width="92" height="62" fill="#0b1520"></rect>
+        <rect x="126" y="40" width="41" height="54" fill="#102130"></rect>
+        <rect x="171" y="40" width="39" height="54" fill="#0f1c28"></rect>
+        <rect x="129" y="44" width="29" height="2" fill="#4fd6c8" opacity=".9"></rect>
+        <rect x="129" y="49" width="17" height="2" fill="#8ad6f0" opacity=".8"></rect>
+        <rect x="133" y="54" width="23" height="2" fill="#e0c07a" opacity=".8"></rect>
+        <rect x="133" y="59" width="13" height="2" fill="#4fd6c8" opacity=".7"></rect>
+        <rect x="129" y="64" width="33" height="2" fill="#8ad6f0" opacity=".7"></rect>
+        <rect x="133" y="69" width="19" height="2" fill="#e0c07a" opacity=".6"></rect>
+        <rect x="129" y="74" width="25" height="2" fill="#4fd6c8" opacity=".6"></rect>
+        <rect x="129" y="84" width="10" height="2" fill="#5ad6a0" opacity=".9"></rect>
+        <rect x="141" y="84" width="2" height="2" fill="#eafff8" style="animation:caret 1s steps(1) infinite"></rect>
+        <g fill="#7ef0d8">
+          <rect x="177" y="48" width="3" height="3"></rect>
+          <rect x="177" y="60" width="3" height="3"></rect>
+          <rect x="177" y="72" width="3" height="3"></rect>
+          <rect x="190" y="44" width="3" height="3"></rect>
+          <rect x="190" y="56" width="3" height="3"></rect>
+          <rect x="190" y="68" width="3" height="3"></rect>
+          <rect x="190" y="80" width="3" height="3"></rect>
+          <rect x="203" y="54" width="3" height="3"></rect>
+          <rect x="203" y="68" width="3" height="3"></rect>
+        </g>
+        <g stroke="#2f7a86" stroke-width="1" opacity=".85">
+          <line x1="180" y1="49" x2="190" y2="45"></line>
+          <line x1="180" y1="49" x2="190" y2="57"></line>
+          <line x1="180" y1="61" x2="190" y2="57"></line>
+          <line x1="180" y1="61" x2="190" y2="69"></line>
+          <line x1="180" y1="73" x2="190" y2="69"></line>
+          <line x1="180" y1="73" x2="190" y2="81"></line>
+          <line x1="193" y1="45" x2="203" y2="55"></line>
+          <line x1="193" y1="57" x2="203" y2="55"></line>
+          <line x1="193" y1="69" x2="203" y2="69"></line>
+          <line x1="193" y1="81" x2="203" y2="69"></line>
+        </g>
+        <rect x="122" y="98" width="92" height="6" fill="#16151e"></rect>
+        <rect x="209" y="100" width="3" height="2" fill="#5ad6a0"></rect>
+        <rect x="159" y="106" width="18" height="14" fill="#22212c"></rect>
+        <rect x="143" y="120" width="50" height="6" fill="#2a2934"></rect>
+        <rect x="143" y="120" width="50" height="2" fill="#3a3947"></rect>
+        </g>
+      </svg>
+
+      <img class="px" src="room/pixel/keyboard-t.png" alt="" style="position:absolute;left:34.38%;top:65.56%;width:36.25%;height:12.22%">
+
+      <!-- 相机（Visual，SVG 手绘） -->
+      <svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid meet" style="position:absolute;inset:0;width:100%;height:100%;display:block;shape-rendering:crispEdges;pointer-events:none;animation:gV 2.8s ease-in-out 2.4s infinite">
+        <rect x="6" y="140" width="36" height="1" fill="#000" opacity=".3"></rect>
+        <rect x="12" y="141" width="24" height="1" fill="#000" opacity=".2"></rect>
+        <rect x="18" y="120" width="12" height="4" fill="#3a3a45"></rect>
+        <rect x="18" y="120" width="12" height="1" fill="#4a4a57"></rect>
+        <rect x="4" y="124" width="40" height="16" fill="#2b2b33"></rect>
+        <rect x="4" y="124" width="40" height="2" fill="#3c3c48"></rect>
+        <rect x="4" y="124" width="6" height="16" fill="#35353f"></rect>
+        <rect x="4" y="138" width="40" height="2" fill="#1f1f26"></rect>
+        <rect x="2" y="127" width="3" height="4" fill="#22222a"></rect>
+        <rect x="38" y="121" width="5" height="3" fill="#c0392b"></rect>
+        <rect x="38" y="121" width="5" height="1" fill="#d4553f"></rect>
+        <g fill="#1b1b21">
+          <rect x="21" y="125" width="8" height="2"></rect>
+          <rect x="18" y="127" width="14" height="2"></rect>
+          <rect x="16" y="129" width="18" height="6"></rect>
+          <rect x="18" y="135" width="14" height="2"></rect>
+          <rect x="21" y="137" width="8" height="2"></rect>
+        </g>
+        <g fill="#0b0b0f">
+          <rect x="22" y="127" width="6" height="2"></rect>
+          <rect x="19" y="129" width="12" height="6"></rect>
+          <rect x="22" y="135" width="6" height="2"></rect>
+        </g>
+        <g fill="#26476b">
+          <rect x="23" y="129" width="4" height="2"></rect>
+          <rect x="22" y="131" width="6" height="4"></rect>
+        </g>
+        <rect x="23" y="130" width="2" height="2" fill="#cfe2f5" opacity=".9"></rect>
+        <rect x="8" y="126" width="4" height="2" fill="#8d919b"></rect>
+        <rect x="8" y="126" width="4" height="1" fill="#a9adb6"></rect>
+        <rect x="8" y="134" width="7" height="2" fill="#6b6f7a"></rect>
+      </svg>
+
+      <!-- 暗角 + 选择框 + 热区 -->
+      <svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid meet" style="position:absolute;inset:0;width:100%;height:100%;display:block;shape-rendering:crispEdges">
+        <defs>
+          <radialGradient id="vig" cx="50%" cy="44%" r="78%">
+            <stop offset="58%" stop-color="#000" stop-opacity="0"></stop>
+            <stop offset="100%" stop-color="#000" stop-opacity=".52"></stop>
+          </radialGradient>
+        </defs>
+        <rect x="0" y="0" width="320" height="180" fill="url(#vig)" style="pointer-events:none"></rect>
+
+        <g id="rmSel" style="pointer-events:none;opacity:0;transition:opacity .12s linear">
+          <rect id="rmSelFill" x="0" y="0" width="0" height="0" fill="#b3a6d6" opacity=".1"></rect>
+          <rect id="rmSelStroke" x="0" y="0" width="0" height="0" fill="none" stroke="#b3a6d6" stroke-width="1" stroke-dasharray="4 4" style="animation:ants .7s linear infinite"></rect>
+        </g>
+
+        <g fill="#fff" fill-opacity="0" style="cursor:pointer">
+          <rect id="rmHotMusic"  x="48"  y="100" width="60"  height="27"></rect>
+          <rect id="rmHotAi"     x="118" y="24"  width="100" height="94"></rect>
+          <rect id="rmHotVisual" x="1"   y="118" width="45"  height="24"></rect>
+          <rect id="rmHotPeople" x="214" y="90"  width="44"  height="45"></rect>
+          <rect id="rmHotRowing" x="226" y="28"  width="92"  height="26"></rect>
+        </g>
+      </svg>
+
+      <!-- 进场用的黑幕（entered 后淡出，露出房间） -->
+      <div id="rmDark" style="position:absolute;inset:0;background:#06050c;pointer-events:none;z-index:2;opacity:1;transition:opacity 1.1s ease-out"></div>
+
+      <!-- HUD 顶部 -->
+      <div id="rmHud" style="position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding:clamp(14px,2.2vw,30px);pointer-events:none;z-index:3;opacity:0;transition:opacity .6s ease .35s">
+        <div>
+          <div style="font-family:'Press Start 2P',monospace;font-size:clamp(9px,.86vw,14px);letter-spacing:.06em;color:#f6efd8;text-shadow:0 2px 0 #000">WILLIAM WANG</div>
+          <div style="font-family:'Press Start 2P',monospace;font-size:clamp(6px,.58vw,9px);letter-spacing:.14em;color:#b3a6d6;margin-top:8px;white-space:nowrap">ABOUT &nbsp;/&nbsp; ROOM 01 &mdash; 02:14 AM</div>
         </div>
-      </a>
+        <div style="font-family:'Press Start 2P',monospace;font-size:clamp(6px,.58vw,9px);letter-spacing:.1em;color:#8f86b5;text-align:right;line-height:2;white-space:nowrap">5 OBJECTS<br><span id="rmFound">0</span> VISITED</div>
+      </div>
 
-      <!-- Visual & Media：手写放在左上角树叶处 -->
-      <a class="home-card" href="#visual" style="--cc:var(--c-visual)">
-        <img src="照片素材/visual%20media/web/v09.jpg" alt="Visual &amp; Media" loading="lazy">
-        <svg class="doodle" style="--rot:6deg;top:10px;right:12px;width:34px" viewBox="0 0 40 40" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><circle cx="20" cy="20" r="7" fill="#fff"/><path d="M20 3v5M20 32v5M3 20h5M32 20h5M8 8l3.5 3.5M28.5 28.5 32 32M32 8l-3.5 3.5M11.5 28.5 8 32"/></svg>
-        <div class="home-card__cap">
-          <img class="home-card__hand" src="照片素材/handwriting/visual.png" alt="My personal statement lol :)" loading="lazy">
-          <span class="home-card__label">Visual &amp; Media<span class="arw">&rarr;</span></span>
+      <!-- HUD 底部提示条 -->
+      <div id="rmBottom" style="position:absolute;left:0;right:0;bottom:0;padding:clamp(14px,2.2vw,30px);display:flex;justify-content:center;pointer-events:none;z-index:3;opacity:0;transition:opacity .6s ease .35s">
+        <div style="display:flex;align-items:center;gap:12px;background:rgba(10,8,18,.82);border:1px solid rgba(179,166,214,.28);padding:10px 16px;font-family:'Press Start 2P',monospace;font-size:clamp(6px,.6vw,10px);letter-spacing:.1em;color:#efe9dc;min-height:34px">
+          <span id="rmHintDot" style="color:#b3a6d6">&gt;</span>
+          <span id="rmHint" style="white-space:nowrap">MOVE THE CURSOR OVER THINGS ON THE DESK</span>
         </div>
-      </a>
+      </div>
 
-      <!-- Rowing & Fitness：手写放在标题上方一行 -->
-      <a class="home-card" href="#rowing" style="--cc:var(--c-rowing)">
-        <img src="rowing/web/r03.jpg" alt="Rowing &amp; Fitness" loading="lazy" style="object-position:16% center">
-        <svg class="doodle" style="--rot:0deg;top:14px;left:13px;width:24px" viewBox="0 0 28 34"><path d="M14 2c5 7 9 11 9 16a9 9 0 1 1-18 0c0-5 4-9 9-16Z" fill="#fff"/></svg>
-        <svg class="doodle" style="--rot:12deg;top:48px;left:38px;width:14px" viewBox="0 0 28 34"><path d="M14 2c5 7 9 11 9 16a9 9 0 1 1-18 0c0-5 4-9 9-16Z" fill="#fff"/></svg>
-        <div class="home-card__cap">
-          <img class="home-card__hand" src="照片素材/handwriting/rowing.png" alt="1st time falling off a boat" loading="lazy">
-          <span class="home-card__label">Rowing &amp; Fitness<span class="arw">&rarr;</span></span>
-        </div>
-      </a>
+      <!-- 物件悬停气泡：弹在物件旁，说明它对应哪个板块 -->
+      <div id="rmTip" class="room__tip" data-pos="above" aria-hidden="true">
+        <b id="rmTipT">AI &amp; Society</b>
+        <span>CLICK TO OPEN</span>
+      </div>
 
-      <!-- Music：拆成 3 行放大，放在头顶上方 -->
-      <a class="home-card" href="#music" style="--cc:var(--c-music)">
-        <img src="music/web/ig1.jpg" alt="Music" loading="lazy">
-        <svg class="doodle" style="--rot:-8deg;top:12px;right:12px;width:30px" viewBox="0 0 40 40"><path d="M15 5l18-3v21a5 5 0 1 1-3-4.6V8L18 10v16a5 5 0 1 1-3-4.6V5Z" fill="#fff"/></svg>
-        <div class="home-card__cap">
-          <img class="home-card__hand" src="照片素材/handwriting/music.png" alt="1st time going to the imagine dragon's concert on my birthday!" loading="lazy">
-          <span class="home-card__label">Music<span class="arw">&rarr;</span></span>
-        </div>
-      </a>
+      <!-- 入场存档卡：照片 + 简介 -->
+      <div id="rmIntro" class="room__intro">
+        <div class="room__save">
+          <div style="padding:clamp(14px,1.8vw,22px) clamp(16px,2.2vw,30px);border-bottom:1px solid rgba(239,233,220,.12)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;font-family:'Press Start 2P',monospace;font-size:clamp(6px,.58vw,9px);letter-spacing:.14em;color:#8f86b5;white-space:nowrap">
+              <span>LOADING SAVE FILE</span>
+              <span>ABOUT / ROOM 01</span>
+            </div>
+            <div style="margin-top:12px;height:4px;background:rgba(239,233,220,.1)">
+              <div style="height:4px;background:#5ad6c0;animation:bootBar 1.5s steps(16) .2s both"></div>
+            </div>
+          </div>
 
-      <!-- People：手写放在标题上方一行（完整显示） -->
-      <a class="home-card" href="#people" style="--cc:var(--c-people)">
-        <img src="people/mom.jpg" alt="People who inspired me" loading="lazy">
-        <svg class="doodle" style="--rot:-12deg;top:12px;left:12px;width:30px" viewBox="0 0 40 40"><path d="M20 34C6 24 8 11 16 11c3 0 4 2.4 4 3.6 0-1.2 1-3.6 4-3.6 8 0 10 13-4 23Z" fill="#fff"/></svg>
-        <div class="home-card__cap">
-          <img class="home-card__hand" src="照片素材/handwriting/people.png" alt="Travelling around China with my mom" loading="lazy">
-          <span class="home-card__label">People<span class="arw">&rarr;</span></span>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:clamp(18px,2.4vw,36px);padding:clamp(16px,2.2vw,28px) clamp(16px,2.2vw,32px)">
+            <div style="min-width:0">
+              <img src="room/about.jpg" alt="William Wang" style="width:100%;height:clamp(200px,38vh,360px);object-fit:cover;display:block;border:1px solid rgba(239,233,220,.16);animation:wipe 1.2s steps(14) .3s both">
+              <div style="margin-top:12px;font-family:'Press Start 2P',monospace;font-size:8px;letter-spacing:.12em;color:#8f86b5;animation:lineIn .4s ease 1.5s both">PLAYER &mdash; WISEMAN</div>
+            </div>
+            <div style="min-width:0;display:flex;flex-direction:column;justify-content:center">
+              <h1 style="margin:0 0 16px;font-family:'Press Start 2P',monospace;font-weight:400;font-size:clamp(12px,1.15vw,17px);letter-spacing:.04em;line-height:1.6;color:#f6efd8;animation:lineIn .45s ease .2s both">ABOUT ME</h1>
+              <div style="font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;font-size:clamp(12px,1.05vw,16px);line-height:1.7;color:#efe9dc">
+                <p style="margin:0 0 4px;animation:lineIn .5s ease .95s both">I am William Wang, you can call me by my hobbit name: Wiseman.</p>
+                <p style="margin:0 0 4px;animation:lineIn .5s ease 1.2s both">I am multifaceted: I love sports, I love arts, I love research.</p>
+                <p style="margin:0 0 4px;animation:lineIn .5s ease 1.45s both">I&rsquo;ve been exploring who I am in the past few years.</p>
+                <p style="margin:0 0 4px;animation:lineIn .5s ease 1.7s both">I am an extrovert but love to daydream and ponder.</p>
+                <p style="margin:0 0 4px;animation:lineIn .5s ease 1.95s both">I want to plan everything out but am willing to let things flow.</p>
+                <p style="margin:0 0 4px;animation:lineIn .5s ease 2.2s both">I follow my heart but also keep my head.</p>
+                <p style="margin:0;animation:lineIn .5s ease 2.45s both">Anyways, lovely to meet you!</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:clamp(16px,2vw,24px);border-top:1px solid rgba(239,233,220,.12);font-family:'Press Start 2P',monospace;font-size:clamp(7px,.6vw,10px);letter-spacing:.12em;color:#5ad6c0;animation:lineIn .4s ease 2.9s both">
+            <span style="animation:caret 1s steps(1) infinite">&#9654;</span>
+            <span style="white-space:nowrap">PRESS ANY KEY / CLICK TO ENTER THE ROOM</span>
+          </div>
         </div>
-      </a>
+      </div>
 
     </div>
   </div>
 </section>
-
 <!-- AI & Society -->
 <section id="p-ai" class="page">
   <div class="wrap">
-    <h2>AI &amp; Society</h2>
+    <h2 class="sec-title">AI &amp; Society</h2>
+    <p class="sec-meta">01 — Four passion projects</p>
 
-    <p class="intro">I love AI. My best mate along the way in high school.</p>
-    <p class="intro">Always wanting to learn more about this technology, I started several passion projects.</p>
+    <div class="sec-lead">
+      <p class="intro">I love AI. My best mate along the way in high school.</p>
+      <p class="intro">Always wanting to learn more about this technology, I started several passion projects.</p>
+    </div>
 
-    <!-- 折叠盒：用原生 <details>，点标题或右侧 +/− 都能开合，不需要 JS。
-         想默认展开某一个，给它加 open 属性即可：<details class="box" open> -->
+    <div class="stats">
+      <div><b>150+</b><span>Elderly residents reached</span></div>
+      <div><b>40,000+</b><span>Views on the videos</span></div>
+      <div><b>100+</b><span>Interview samples</span></div>
+    </div>
+
     <div class="boxes">
 
-      <details class="box">
-        <summary>1). Research Paper Investigating AI Development in the U.S. and China</summary>
+      <details class="box" open>
+        <summary><span class="box__num">01</span><span class="box__t">Research Paper — AI Development in the U.S. and China</span></summary>
         <div class="box__body">
           <p>I participated in a Pioneer program and wrote about this topic. Comparing and
              contrasting the two nations offers insight into their economic, political, and other
              social circumstances.</p>
-          <!-- 论文：浏览器自带的 PDF 阅读器。iOS Safari 在 iframe 里几乎渲染不出 PDF，
-               所以窄屏隐藏这个框、只留下面那个链接；宽屏两个都在。 -->
           <p class="paper-title">Two Innovation Systems, One AI Rivalry: Comparing Artificial Intelligence Development and Its Economic and Political Consequences in China and the United States</p>
-          <figure class="pdf">
-            <!-- 用 <object> 而不是 <iframe>：浏览器渲染不了 PDF 时，
-                 标签之间的后备内容会顶上来，不会只剩一个空灰框。 -->
-            <object data="AI%20society/William%20Pioneer%20Paper-finalver.pdf#view=FitH&amp;navpanes=0" type="application/pdf"
-                    aria-label="Two Innovation Systems, One AI Rivalry: Comparing Artificial Intelligence Development and Its Economic and Political Consequences in China and the United States（PDF，53 页）">
-              <div class="pdf__fallback">
-                <p>这个浏览器不能直接内嵌显示 PDF。</p>
-                <a class="pdf__link" href="AI%20society/William%20Pioneer%20Paper-finalver.pdf" target="_blank" rel="noopener">
-                  在新标签页打开论文 ↗</a>
-              </div>
-            </object>
+          <figure class="paper-card">
+            <a href="AI%20society/William%20Pioneer%20Paper-finalver.pdf" target="_blank" rel="noopener">
+              <img src="AI%20society/web/paper-first-page.jpg" width="1081" height="1400" alt="First page of the research paper" loading="lazy">
+            </a>
+            <a class="paper-open" href="AI%20society/William%20Pioneer%20Paper-finalver.pdf" target="_blank" rel="noopener">Open the full paper (53 pages) &#8599;</a>
           </figure>
         </div>
       </details>
 
       <details class="box">
-        <summary>2). AI Tutoring Videos and Programs for Senior Netizens</summary>
+        <summary><span class="box__num">02</span><span class="box__t">AI Tutoring Videos and Programs for Senior Netizens</span></summary>
         <div class="box__body">
           <p><strong>Existing problem:</strong> I noticed that my grandparents could not identify
              AI-generated fake information that seemed to be correct.</p>
-          <p><strong>Solution:</strong> I designed a course incorporating some of senior netizens’
+          <p><strong>Solution:</strong> I designed a course incorporating some of senior netizens&rsquo;
              routine needs and teaching them how to verify the authenticity of information.</p>
           <p><strong>Outcome:</strong> This has helped them avoid online AI fraud and health risks
              related to incorrect AI responses. The course has been made into online videos and
@@ -919,10 +1383,10 @@ body:has(#p-people.on) .bgp{opacity:1}
       </details>
 
       <details class="box">
-        <summary>3). Researching AI Usage Characteristics Among Senior Netizens</summary>
+        <summary><span class="box__num">03</span><span class="box__t">Researching AI Usage Characteristics Among Senior Netizens</span></summary>
         <div class="box__body">
           <p><strong>What is it:</strong> This is a follow-up project to the previous project. I
-             interviewed and investigated 100+ senior netizens aged 50–70 who attended my course to
+             interviewed and investigated 100+ senior netizens aged 50&ndash;70 who attended my course to
              understand how they use AI tools.</p>
           <p><strong>Conclusion:</strong></p>
           <ol>
@@ -936,13 +1400,13 @@ body:has(#p-people.on) .bgp{opacity:1}
       </details>
 
       <details class="box">
-        <summary>4). Short Video of AI Blind Spot among Senior Netizens</summary>
+        <summary><span class="box__num">04</span><span class="box__t">Short Video of AI Blind Spot among Senior Netizens</span></summary>
         <div class="box__body">
           <p><strong>What is it:</strong> I used the AI video generation tool Seedance to create two
              short films. The content includes realistic scenarios of AI scams and misleading health
              information.</p>
           <p><strong>Outcome:</strong> Those videos raise awareness of the risks AI can pose to
-             older people’s finances and health, and have received 40,000+ views in total.</p>
+             older people&rsquo;s finances and health, and have received 40,000+ views in total.</p>
         </div>
       </details>
 
@@ -1330,6 +1794,7 @@ body:has(#p-people.on) .bgp{opacity:1}
   </div>
 </section>
 
+
 </main>
 
 <!-- ▼ 新增：过场动画用的全屏遮罩（相机 + 白光） -->
@@ -1350,8 +1815,13 @@ body:has(#p-people.on) .bgp{opacity:1}
 </div>
 
 <footer>
-  <a href="mailto:williamwang5277@gmail.com">williamwang5277@gmail.com</a>
-  <p style="margin-top:12px">© 2026 William Wang</p>
+  <div class="footer__links">
+    <a href="mailto:williamwang5277@gmail.com">Email</a>
+    <a href="#" onclick="return false" data-todo="cv">CV</a>
+    <a href="#" onclick="return false" data-todo="linkedin">LinkedIn</a>
+    <a href="#" onclick="return false" data-todo="instagram">Instagram</a>
+  </div>
+  <p class="copy" style="margin-top:clamp(24px,4vw,36px);font-size:12px;color:var(--muted)">© 2026 William Wang</p>
 </footer>
 
 <!-- 唯一的 JS：按地址栏的 #锚点 切换页面 -->
@@ -1368,10 +1838,65 @@ function show(id) {
   pages.forEach(function (p) { p.classList.toggle('on', p === target); });
   links.forEach(function (a) { a.classList.toggle('on', a.hash === '#' + id); });
   window.scrollTo(0, 0);
+  if (window.__updateNav) window.__updateNav();
 }
 
 show(location.hash.slice(1) || 'about');
 window.addEventListener('hashchange', function () { transitionTo(location.hash.slice(1)); });
+</script>
+
+<!-- 首页重构：固定导航滚动变实 + 手写淡入 + Hero 下滚提示 -->
+<script>
+(function () {
+  var nav = document.querySelector('nav');
+  window.__updateNav = function () {
+    var home = document.getElementById('p-about').classList.contains('on');
+    nav.classList.toggle('solid', !home || window.scrollY > 80);
+    nav.classList.toggle('nav--hide', home);   // 房间页沉浸：隐藏顶栏，靠房间物件导航
+    var tr = document.getElementById('toRoom'); // 「回到房间」按钮：只在 section 页出现
+    if (tr) tr.hidden = home;
+  };
+
+  // 「回到房间」：点击按钮或按 Esc，关掉当前 section，回到桌面场景
+  function backToRoom() {
+    if (window.__roomEnter) window.__roomEnter();  // 直接进桌面场景，不再回存档卡
+    location.hash = '#about';
+  }
+  var toRoomBtn = document.getElementById('toRoom');
+  if (toRoomBtn) toRoomBtn.addEventListener('click', backToRoom);
+  window.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !document.getElementById('p-about').classList.contains('on')) backToRoom();
+  });
+  window.addEventListener('scroll', window.__updateNav, { passive: true });
+  window.__updateNav();
+
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.2 });
+    document.querySelectorAll('.home-intro__hand').forEach(function (el) { io.observe(el); });
+  } else {
+    document.querySelectorAll('.home-intro__hand').forEach(function (el) { el.classList.add('in'); });
+  }
+
+  document.querySelectorAll('.hero__scroll').forEach(function (el) {
+    function go(){ window.scrollTo({ top: Math.round(window.innerHeight * 0.92), behavior: 'smooth' }); }
+    el.addEventListener('click', go);
+    el.addEventListener('keydown', function (e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+  });
+
+  // 移动端汉堡菜单
+  var toggle = document.querySelector('.nav__toggle');
+  if (toggle) {
+    toggle.addEventListener('click', function () {
+      var open = nav.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    nav.querySelectorAll('.nav__links a').forEach(function (a) {
+      a.addEventListener('click', function () { nav.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); });
+    });
+  }
+})();
 </script>
 
 
@@ -2002,6 +2527,114 @@ window.addEventListener('hashchange', function () { transitionTo(location.hash.s
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     }
+  });
+})();
+</script>
+
+
+<!-- ▼▼▼ About Room 交互：存档卡 → 房间 → 物件 hover 高亮 → 点击直接跳转到对应的老 section 页 ▼▼▼ -->
+<script>
+(function () {
+  var room = document.getElementById('room');
+  if (!room) return;
+
+  var intro   = document.getElementById('rmIntro');
+  var dark    = document.getElementById('rmDark');
+  var hud     = document.getElementById('rmHud');
+  var bottom  = document.getElementById('rmBottom');
+  var foundEl = document.getElementById('rmFound');
+  var selG    = document.getElementById('rmSel');
+  var selFill = document.getElementById('rmSelFill');
+  var selStr  = document.getElementById('rmSelStroke');
+  var hintEl  = document.getElementById('rmHint');
+  var hintDot = document.getElementById('rmHintDot');
+  var tip     = document.getElementById('rmTip');
+  var tipT    = document.getElementById('rmTipT');
+
+  var order = ['ai', 'visual', 'rowing', 'music', 'people'];
+  var meta = {
+    ai:     { title: 'AI & Society',           accent: '#5ad6c0', hash: '#ai',     word: 'THE COMPUTER' },
+    visual: { title: 'Visual & Media',         accent: '#e0b15a', hash: '#visual', word: 'THE CAMERA' },
+    rowing: { title: 'Rowing & Fitness',       accent: '#6aa9dd', hash: '#rowing', word: 'THE SHELL ON THE WALL' },
+    music:  { title: 'Music',                  accent: '#dd7f63', hash: '#music',  word: 'THE RECORD PLAYER' },
+    people: { title: 'People who inspired me', accent: '#b892dd', hash: '#people', word: 'THE PHOTOGRAPH' }
+  };
+  var spots = {
+    music:  { x: 48,  y: 100, w: 60,  h: 27 },
+    ai:     { x: 118, y: 24,  w: 100, h: 94 },
+    visual: { x: 1,   y: 118, w: 45,  h: 24 },
+    people: { x: 214, y: 90,  w: 44,  h: 45 },
+    rowing: { x: 226, y: 28,  w: 92,  h: 26 }
+  };
+
+  var entered = false, seen = [];
+
+  function setSel(k) {
+    if (!k) { selG.style.opacity = 0; return; }
+    var b = spots[k], a = meta[k].accent;
+    selFill.setAttribute('x', b.x); selFill.setAttribute('y', b.y);
+    selFill.setAttribute('width', b.w); selFill.setAttribute('height', b.h); selFill.setAttribute('fill', a);
+    selStr.setAttribute('x', b.x); selStr.setAttribute('y', b.y);
+    selStr.setAttribute('width', b.w); selStr.setAttribute('height', b.h); selStr.setAttribute('stroke', a);
+    selG.style.opacity = 1;
+  }
+  function setHint(k) {
+    if (k) {
+      hintEl.textContent = meta[k].word + '  \u2014  ' + meta[k].title.toUpperCase() + '   [ CLICK ]';
+      hintDot.style.color = meta[k].accent;
+    } else {
+      hintEl.textContent = 'MOVE THE CURSOR OVER THINGS ON THE DESK';
+      hintDot.style.color = '#b3a6d6';
+    }
+  }
+
+  // \u7269\u4ef6\u65c1\u7684\u8bf4\u660e\u6c14\u6ce1\uff1a\u544a\u8bc9\u4f60\u8fd9\u4e2a\u7269\u4ef6\u662f\u54ea\u4e2a\u677f\u5757
+  function setTip(k) {
+    if (!k) { tip.classList.remove('show'); return; }
+    var m = meta[k], b = spots[k];
+    tipT.textContent = m.title;
+    tip.style.setProperty('--tip', m.accent);
+    var cx = (b.x + b.w / 2) / 320 * 100;
+    tip.style.left = Math.max(16, Math.min(84, cx)) + '%';   // 夹住，别顶出画面左右边
+    var above = b.y > 40;   // \u9876\u90e8\u7684\u7269\u4ef6\u628a\u6c14\u6ce1\u653e\u5230\u4e0b\u65b9\uff0c\u514d\u5f97\u9876\u51fa\u753b\u9762
+    tip.setAttribute('data-pos', above ? 'above' : 'below');
+    if (above) {
+      tip.style.top = (b.y / 180 * 100) + '%';
+      tip.style.transform = 'translate(-50%,calc(-100% - 11px))';
+    } else {
+      tip.style.top = ((b.y + b.h) / 180 * 100) + '%';
+      tip.style.transform = 'translate(-50%,11px)';
+    }
+    tip.classList.add('show');
+  }
+  function enter() {
+    if (entered) return;
+    entered = true;
+    intro.classList.add('gone');
+    dark.style.opacity = 0;
+    hud.style.opacity = 1;
+    bottom.style.opacity = 1;
+  }
+  window.__roomEnter = enter;   // 供「回到房间」按钮直接进桌面场景（跳过存档卡）
+  function go(k) {
+    if (seen.indexOf(k) < 0) { seen.push(k); foundEl.textContent = seen.length; }
+    setSel(null); setTip(null);
+    location.hash = meta[k].hash;   // → hashchange → transitionTo → 老 section
+  }
+
+  order.forEach(function (k) {
+    var el = document.getElementById('rmHot' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (!el) return;
+    el.addEventListener('mouseenter', function () { setSel(k); setHint(k); setTip(k); });
+    el.addEventListener('mouseleave', function () { setSel(null); setHint(null); setTip(null); });
+    el.addEventListener('click', function () { enter(); go(k); });
+  });
+
+  intro.addEventListener('click', enter);
+
+  window.addEventListener('keydown', function () {
+    if (!document.getElementById('p-about').classList.contains('on')) return;
+    if (!entered) enter();
   });
 })();
 </script>
