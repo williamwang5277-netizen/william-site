@@ -985,6 +985,25 @@ nav.solid .nav__brand{opacity:1;transform:none;pointer-events:auto}
 .room__tip[data-pos="below"]::after{top:-5px;border-left:1px solid var(--tip,#b3a6d6);
   border-top:1px solid var(--tip,#b3a6d6);transform:rotate(45deg)}
 
+/* 物件常驻名牌：不用悬停也知道每个物件是哪个板块 */
+.room__plate{position:absolute;z-index:3;pointer-events:none;
+  font-family:'Press Start 2P',monospace;font-size:clamp(6px,.58vw,8px);letter-spacing:.04em;
+  white-space:nowrap;padding:3px 6px;background:rgba(8,7,14,.68);border:1px solid transparent;
+  color:#cfc9dd;opacity:.62;transition:opacity .18s ease,border-color .18s ease;text-shadow:0 1px 0 #000}
+.room__plate.hot{opacity:1;border-color:currentColor}
+
+/* 底部快捷目录：任何板块一键直达（招生官不用探索也能直接进内容） */
+.room__dir{position:absolute;left:0;right:0;bottom:0;z-index:3;display:flex;justify-content:center;
+  padding:clamp(12px,2vw,26px);pointer-events:none}
+.room__dir__inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 12px;
+  background:rgba(10,8,18,.85);border:1px solid rgba(179,166,214,.28);padding:10px 15px;
+  font-family:'Press Start 2P',monospace;font-size:clamp(6px,.6vw,9px);letter-spacing:.05em;line-height:1}
+.room__dir__lead{color:#8f86b5}
+.room__dir__sep{color:#4b4660}
+.room__dir a{pointer-events:auto;text-decoration:none;color:currentColor;opacity:.9;
+  border-bottom:1px solid transparent;padding-bottom:3px;transition:opacity .18s ease,border-color .18s ease}
+.room__dir a:hover,.room__dir a.hot{opacity:1;border-bottom-color:currentColor}
+
 /* 房间页隐藏顶栏（沉浸），其余 section 恢复 */
 nav.nav--hide{opacity:0;pointer-events:none;transition:opacity .4s ease}
 
@@ -1273,18 +1292,23 @@ nav{display:none !important}
         <div style="font-family:'Press Start 2P',monospace;font-size:clamp(6px,.58vw,9px);letter-spacing:.1em;color:#8f86b5;text-align:right;line-height:2;white-space:nowrap">5 OBJECTS<br><span id="rmFound">0</span> VISITED</div>
       </div>
 
-      <!-- HUD 底部提示条 -->
-      <div id="rmBottom" style="position:absolute;left:0;right:0;bottom:0;padding:clamp(14px,2.2vw,30px);display:flex;justify-content:center;pointer-events:none;z-index:3;opacity:0;transition:opacity .6s ease .35s">
-        <div style="display:flex;align-items:center;gap:12px;background:rgba(10,8,18,.82);border:1px solid rgba(179,166,214,.28);padding:10px 16px;font-family:'Press Start 2P',monospace;font-size:clamp(6px,.6vw,10px);letter-spacing:.1em;color:#efe9dc;min-height:34px">
-          <span id="rmHintDot" style="color:#b3a6d6">&gt;</span>
-          <span id="rmHint" style="white-space:nowrap">MOVE THE CURSOR OVER THINGS ON THE DESK</span>
-        </div>
-      </div>
+      <!-- 物件常驻名牌（JS 按物件位置填充）：进来就能看清每个物件是哪个板块 -->
+      <div id="rmPlates" style="position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .6s ease .35s"></div>
 
-      <!-- 物件悬停气泡：弹在物件旁，说明它对应哪个板块 -->
-      <div id="rmTip" class="room__tip" data-pos="above" aria-hidden="true">
-        <b id="rmTipT">AI &amp; Society</b>
-        <span>CLICK TO OPEN</span>
+      <!-- 底部快捷目录：一键直达任意板块 -->
+      <div id="rmDir" class="room__dir" style="opacity:0;transition:opacity .6s ease .35s">
+        <div class="room__dir__inner">
+          <span class="room__dir__lead">OPEN&nbsp;&rarr;</span>
+          <a class="rmdir" data-k="ai"     href="#ai"     style="color:#5ad6c0">AI &amp; Society</a>
+          <span class="room__dir__sep">/</span>
+          <a class="rmdir" data-k="visual" href="#visual" style="color:#e0b15a">Visual &amp; Media</a>
+          <span class="room__dir__sep">/</span>
+          <a class="rmdir" data-k="rowing" href="#rowing" style="color:#6aa9dd">Rowing &amp; Fitness</a>
+          <span class="room__dir__sep">/</span>
+          <a class="rmdir" data-k="music"  href="#music"  style="color:#dd7f63">Music</a>
+          <span class="room__dir__sep">/</span>
+          <a class="rmdir" data-k="people" href="#people" style="color:#b892dd">People</a>
+        </div>
       </div>
 
       <!-- 入场存档卡：照片 + 简介 -->
@@ -2532,7 +2556,7 @@ window.addEventListener('hashchange', function () { transitionTo(location.hash.s
 </script>
 
 
-<!-- ▼▼▼ About Room 交互：存档卡 → 房间 → 物件 hover 高亮 → 点击直接跳转到对应的老 section 页 ▼▼▼ -->
+<!-- ▼▼▼ About Room 交互：存档卡 → 房间 → 物件常驻名牌 + 底部快捷目录 → 点击直达老 section ▼▼▼ -->
 <script>
 (function () {
   var room = document.getElementById('room');
@@ -2541,23 +2565,20 @@ window.addEventListener('hashchange', function () { transitionTo(location.hash.s
   var intro   = document.getElementById('rmIntro');
   var dark    = document.getElementById('rmDark');
   var hud     = document.getElementById('rmHud');
-  var bottom  = document.getElementById('rmBottom');
+  var dir     = document.getElementById('rmDir');
+  var plates  = document.getElementById('rmPlates');
   var foundEl = document.getElementById('rmFound');
   var selG    = document.getElementById('rmSel');
   var selFill = document.getElementById('rmSelFill');
   var selStr  = document.getElementById('rmSelStroke');
-  var hintEl  = document.getElementById('rmHint');
-  var hintDot = document.getElementById('rmHintDot');
-  var tip     = document.getElementById('rmTip');
-  var tipT    = document.getElementById('rmTipT');
 
   var order = ['ai', 'visual', 'rowing', 'music', 'people'];
   var meta = {
-    ai:     { title: 'AI & Society',           accent: '#5ad6c0', hash: '#ai',     word: 'THE COMPUTER' },
-    visual: { title: 'Visual & Media',         accent: '#e0b15a', hash: '#visual', word: 'THE CAMERA' },
-    rowing: { title: 'Rowing & Fitness',       accent: '#6aa9dd', hash: '#rowing', word: 'THE SHELL ON THE WALL' },
-    music:  { title: 'Music',                  accent: '#dd7f63', hash: '#music',  word: 'THE RECORD PLAYER' },
-    people: { title: 'People who inspired me', accent: '#b892dd', hash: '#people', word: 'THE PHOTOGRAPH' }
+    ai:     { accent: '#5ad6c0', hash: '#ai',     label: 'AI & Society' },
+    visual: { accent: '#e0b15a', hash: '#visual', label: 'Visual & Media' },
+    rowing: { accent: '#6aa9dd', hash: '#rowing', label: 'Rowing & Fitness' },
+    music:  { accent: '#dd7f63', hash: '#music',  label: 'Music' },
+    people: { accent: '#b892dd', hash: '#people', label: 'People' }
   };
   var spots = {
     music:  { x: 48,  y: 100, w: 60,  h: 27 },
@@ -2567,7 +2588,28 @@ window.addEventListener('hashchange', function () { transitionTo(location.hash.s
     rowing: { x: 226, y: 28,  w: 92,  h: 26 }
   };
 
-  var entered = false, seen = [];
+  var entered = false, seen = [], plateEls = {};
+
+  // 建立每个物件旁的常驻名牌
+  order.forEach(function (k) {
+    var m = meta[k], b = spots[k];
+    var el = document.createElement('div');
+    el.className = 'room__plate';
+    el.textContent = m.label;
+    el.style.color = m.accent;
+    el.style.left = Math.max(13, Math.min(87, (b.x + b.w / 2) / 320 * 100)) + '%';
+    if (k === 'ai') {   // 显示器很大，名牌放屏幕上方墓上
+      el.style.top = (b.y / 180 * 100) + '%';
+      el.style.transform = 'translate(-50%,calc(-100% - 6px))';
+    } else {            // 其余物件名牌放下方
+      el.style.top = ((b.y + b.h) / 180 * 100) + '%';
+      el.style.transform = 'translate(-50%,6px)';
+    }
+    plates.appendChild(el);
+    plateEls[k] = el;
+  });
+
+  var dirLinks = Array.prototype.slice.call(document.querySelectorAll('#rmDir .rmdir'));
 
   function setSel(k) {
     if (!k) { selG.style.opacity = 0; return; }
@@ -2578,56 +2620,48 @@ window.addEventListener('hashchange', function () { transitionTo(location.hash.s
     selStr.setAttribute('width', b.w); selStr.setAttribute('height', b.h); selStr.setAttribute('stroke', a);
     selG.style.opacity = 1;
   }
-  function setHint(k) {
-    if (k) {
-      hintEl.textContent = meta[k].word + '  \u2014  ' + meta[k].title.toUpperCase() + '   [ CLICK ]';
-      hintDot.style.color = meta[k].accent;
-    } else {
-      hintEl.textContent = 'MOVE THE CURSOR OVER THINGS ON THE DESK';
-      hintDot.style.color = '#b3a6d6';
-    }
+
+  // 高亮联动：物件选框 + 名牌变亮 + 目录项下划线
+  function hoverK(k) {
+    setSel(k);
+    order.forEach(function (kk) { plateEls[kk].classList.toggle('hot', kk === k); });
+    dirLinks.forEach(function (a) { a.classList.toggle('hot', a.getAttribute('data-k') === k); });
   }
 
-  // \u7269\u4ef6\u65c1\u7684\u8bf4\u660e\u6c14\u6ce1\uff1a\u544a\u8bc9\u4f60\u8fd9\u4e2a\u7269\u4ef6\u662f\u54ea\u4e2a\u677f\u5757
-  function setTip(k) {
-    if (!k) { tip.classList.remove('show'); return; }
-    var m = meta[k], b = spots[k];
-    tipT.textContent = m.title;
-    tip.style.setProperty('--tip', m.accent);
-    var cx = (b.x + b.w / 2) / 320 * 100;
-    tip.style.left = Math.max(16, Math.min(84, cx)) + '%';   // 夹住，别顶出画面左右边
-    var above = b.y > 40;   // \u9876\u90e8\u7684\u7269\u4ef6\u628a\u6c14\u6ce1\u653e\u5230\u4e0b\u65b9\uff0c\u514d\u5f97\u9876\u51fa\u753b\u9762
-    tip.setAttribute('data-pos', above ? 'above' : 'below');
-    if (above) {
-      tip.style.top = (b.y / 180 * 100) + '%';
-      tip.style.transform = 'translate(-50%,calc(-100% - 11px))';
-    } else {
-      tip.style.top = ((b.y + b.h) / 180 * 100) + '%';
-      tip.style.transform = 'translate(-50%,11px)';
-    }
-    tip.classList.add('show');
-  }
   function enter() {
     if (entered) return;
     entered = true;
     intro.classList.add('gone');
     dark.style.opacity = 0;
     hud.style.opacity = 1;
-    bottom.style.opacity = 1;
+    if (dir) dir.style.opacity = 1;
+    if (plates) plates.style.opacity = 1;
   }
-  window.__roomEnter = enter;   // 供「回到房间」按钮直接进桌面场景（跳过存档卡）
+  window.__roomEnter = enter;   // 供「回到房间」按钮直接进桌面场景
+
+  function mark(k) { if (seen.indexOf(k) < 0) { seen.push(k); foundEl.textContent = seen.length; } }
+
   function go(k) {
-    if (seen.indexOf(k) < 0) { seen.push(k); foundEl.textContent = seen.length; }
-    setSel(null); setTip(null);
+    mark(k);
+    hoverK(null);
     location.hash = meta[k].hash;   // → hashchange → transitionTo → 老 section
   }
 
+  // 物件点击区
   order.forEach(function (k) {
     var el = document.getElementById('rmHot' + k.charAt(0).toUpperCase() + k.slice(1));
     if (!el) return;
-    el.addEventListener('mouseenter', function () { setSel(k); setHint(k); setTip(k); });
-    el.addEventListener('mouseleave', function () { setSel(null); setHint(null); setTip(null); });
+    el.addEventListener('mouseenter', function () { hoverK(k); });
+    el.addEventListener('mouseleave', function () { hoverK(null); });
     el.addEventListener('click', function () { enter(); go(k); });
+  });
+
+  // 底部目录：悬停联动高亮对应物件，点击直接进入
+  dirLinks.forEach(function (a) {
+    var k = a.getAttribute('data-k');
+    a.addEventListener('mouseenter', function () { hoverK(k); });
+    a.addEventListener('mouseleave', function () { hoverK(null); });
+    a.addEventListener('click', function () { enter(); mark(k); hoverK(null); });
   });
 
   intro.addEventListener('click', enter);
