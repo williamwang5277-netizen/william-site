@@ -992,18 +992,6 @@ nav.solid .nav__brand{opacity:1;transform:none;pointer-events:auto}
   color:#cfc9dd;opacity:.62;transition:opacity .18s ease,border-color .18s ease;text-shadow:0 1px 0 #000}
 .room__plate.hot{opacity:1;border-color:currentColor}
 
-/* 底部快捷目录：任何板块一键直达（招生官不用探索也能直接进内容） */
-.room__dir{position:absolute;left:0;right:0;bottom:0;z-index:3;display:flex;justify-content:center;
-  padding:clamp(12px,2vw,26px);pointer-events:none}
-.room__dir__inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 12px;
-  background:rgba(10,8,18,.85);border:1px solid rgba(179,166,214,.28);padding:10px 15px;
-  font-family:'Press Start 2P',monospace;font-size:clamp(6px,.6vw,9px);letter-spacing:.05em;line-height:1}
-.room__dir__lead{color:#8f86b5}
-.room__dir__sep{color:#4b4660}
-.room__dir a{pointer-events:auto;text-decoration:none;color:currentColor;opacity:.9;
-  border-bottom:1px solid transparent;padding-bottom:3px;transition:opacity .18s ease,border-color .18s ease}
-.room__dir a:hover,.room__dir a.hot{opacity:1;border-bottom-color:currentColor}
-
 /* 房间页隐藏顶栏（沉浸），其余 section 恢复 */
 nav.nav--hide{opacity:0;pointer-events:none;transition:opacity .4s ease}
 
@@ -1295,21 +1283,6 @@ nav{display:none !important}
       <!-- 物件常驻名牌（JS 按物件位置填充）：进来就能看清每个物件是哪个板块 -->
       <div id="rmPlates" style="position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .6s ease .35s"></div>
 
-      <!-- 底部快捷目录：一键直达任意板块 -->
-      <div id="rmDir" class="room__dir" style="opacity:0;transition:opacity .6s ease .35s">
-        <div class="room__dir__inner">
-          <span class="room__dir__lead">OPEN&nbsp;&rarr;</span>
-          <a class="rmdir" data-k="ai"     href="#ai"     style="color:#5ad6c0">AI &amp; Society</a>
-          <span class="room__dir__sep">/</span>
-          <a class="rmdir" data-k="visual" href="#visual" style="color:#e0b15a">Visual &amp; Media</a>
-          <span class="room__dir__sep">/</span>
-          <a class="rmdir" data-k="rowing" href="#rowing" style="color:#6aa9dd">Rowing &amp; Fitness</a>
-          <span class="room__dir__sep">/</span>
-          <a class="rmdir" data-k="music"  href="#music"  style="color:#dd7f63">Music</a>
-          <span class="room__dir__sep">/</span>
-          <a class="rmdir" data-k="people" href="#people" style="color:#b892dd">People</a>
-        </div>
-      </div>
 
       <!-- 入场存档卡：照片 + 简介 -->
       <div id="rmIntro" class="room__intro">
