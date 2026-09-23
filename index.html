@@ -947,8 +947,10 @@ nav.solid .nav__brand{opacity:1;transform:none;pointer-events:auto}
 @keyframes bootBar{ from { width:0; } to { width:100%; } }
 
 #p-about.page{padding-top:0}
-.room{position:relative;min-height:100vh;min-height:100svh;display:grid;place-items:center;background:#08070e;color:#efe9dc;font-family:'EB Garamond',Georgia,serif;overflow:hidden}
-.room__stage{position:relative;width:min(100%,177.78vh);aspect-ratio:16/9;overflow:hidden;background:#1d1833}
+.room{position:relative;min-height:100vh;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:clamp(10px,1.6vh,18px);background:#08070e;color:#efe9dc;font-family:'EB Garamond',Georgia,serif;overflow:hidden;
+  padding:calc(env(safe-area-inset-top,0px) + 20px) 0 18px;box-sizing:border-box}
+.room__stage{position:relative;flex:none;height:min(56.25vw,62vh);aspect-ratio:16/9;width:auto;max-width:100%;overflow:hidden;background:#1d1833}
 .room .px{image-rendering:pixelated}
 .room__stage rect[id^="rmHot"]{cursor:pointer}
 
@@ -969,6 +971,35 @@ nav.solid .nav__brand{opacity:1;transform:none;pointer-events:auto}
 .room__intro.gone{opacity:0;pointer-events:none}
 .room__save{width:100%;max-width:1060px;max-height:100%;overflow:auto;background:#15121f;box-shadow:0 0 0 3px #2a2440,0 0 0 7px #0b0a14}
 
+/* 存档卡角色面板（P1-3.1）：一眼看到 我是谁 + 主线 + 支线 */
+.rm-panel{display:grid;grid-template-columns:max-content 1fr;gap:11px 16px;margin:0}
+.rm-panel dt{font-family:'Press Start 2P',monospace;font-size:clamp(8px,.72vw,10px);letter-spacing:.05em;
+  color:#8f86b5;line-height:1.5;white-space:nowrap}
+.rm-panel dd{margin:0;font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  font-size:clamp(12px,1.05vw,15px);line-height:1.55;color:#efe9dc}
+.rm-panel dd b{color:#5ad6c0;font-weight:600}
+@media(max-width:560px){
+  .rm-panel{grid-template-columns:1fr;gap:3px 0}
+  .rm-panel dt{margin-top:12px}
+  .rm-panel dt:first-of-type{margin-top:0}
+}
+.rm-hobbit{margin:16px 0 0;font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  font-size:clamp(11px,.95vw,14px);color:#b3a6d6;font-style:italic}
+.rm-tag{margin:6px 0 0;font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  font-size:clamp(11px,.95vw,14px);line-height:1.5;color:rgba(239,233,220,.7)}
+/* 存档卡两个入口按钮（P1-3.2） */
+.rm-enter{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px}
+.rm-btn{font-family:'Press Start 2P',monospace;font-size:clamp(8px,.72vw,10px);letter-spacing:.05em;line-height:1;
+  padding:13px 18px;cursor:pointer;text-decoration:none;border:1px solid;display:inline-block;
+  transition:background .2s ease,color .2s ease,border-color .2s ease}
+.rm-btn--primary{background:#5ad6c0;color:#0b0a14;border-color:#5ad6c0}
+.rm-btn--primary:hover{background:#7fe6d6;border-color:#7fe6d6}
+.rm-btn--ghost{background:none;color:#efe9dc;border-color:rgba(239,233,220,.35)}
+.rm-btn--ghost:hover{border-color:#efe9dc;background:rgba(239,233,220,.08)}
+.rm-anykey{font-family:'Press Start 2P',monospace;font-size:clamp(7px,.55vw,8px);letter-spacing:.1em;color:#5c5674}
+/* 回访本会话：跳过入场动画，直接显示最终状态 */
+.rm-instant *{animation-duration:0s!important;animation-delay:0s!important}
+
 /* 物件悬停气泡：鼠标移到物件上，就在物件旁弹出一个说明它是哪个板块的对话框 */
 .room__tip{position:absolute;z-index:4;pointer-events:none;
   background:rgba(10,8,18,.92);border:1px solid var(--tip,#b3a6d6);
@@ -987,10 +1018,65 @@ nav.solid .nav__brand{opacity:1;transform:none;pointer-events:auto}
 
 /* 物件常驻名牌：不用悬停也知道每个物件是哪个板块 */
 .room__plate{position:absolute;z-index:3;pointer-events:none;
-  font-family:'Press Start 2P',monospace;font-size:clamp(6px,.58vw,8px);letter-spacing:.04em;
+  font-family:'Press Start 2P',monospace;font-size:clamp(9px,.62vw,10px);letter-spacing:.03em;
   white-space:nowrap;padding:3px 6px;background:rgba(8,7,14,.68);border:1px solid transparent;
   color:#cfc9dd;opacity:.62;transition:opacity .18s ease,border-color .18s ease;text-shadow:0 1px 0 #000}
 .room__plate.hot{opacity:1;border-color:currentColor}
+
+/* ===== 直接进房间 + 底部 RPG 对话框（entry v3） ===== */
+@keyframes lampOn{0%{opacity:0}45%{opacity:1}55%{opacity:.5}68%{opacity:1}100%{opacity:1}}
+@keyframes rmGlow{0%,100%{filter:drop-shadow(0 0 2px rgba(90,214,192,.25))}50%{filter:drop-shadow(0 0 7px rgba(90,214,192,.8))}}
+.rm-vh{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* 对话框：停靠在房间舞台下方（不遮挡任何物件热区） */
+.rm-dlg{position:relative;flex:none;width:min(880px,calc(100% - 40px));z-index:6;display:flex;align-items:stretch;gap:clamp(12px,1.6vw,18px);
+  background:rgba(12,10,20,.93);border:2px solid #5ad6c0;box-shadow:inset 0 0 0 2px #0b0a14;
+  padding:clamp(10px,1.3vw,14px);transition:opacity .35s ease}
+.rm-dlg__av{flex:none;width:clamp(150px,17vw,220px);align-self:stretch;overflow:hidden;
+  border:2px solid rgba(239,233,220,.35);background:#0e0c16}
+.rm-dlg__av img{width:100%;height:100%;object-fit:cover;display:block}
+.rm-dlg__main{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.rm-dlg__name{font-family:'Press Start 2P',monospace;font-size:clamp(10px,.8vw,12px);letter-spacing:.08em;color:#f6efd8}
+.rm-dlg__tag{font-family:'Press Start 2P',monospace;font-size:clamp(9px,.7vw,10px);letter-spacing:.05em;margin-left:10px;color:var(--dlgacc,#8f86b5)}
+.rm-dlg__body{position:relative}
+.rm-dlg__line{margin:0 0 2px;font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  font-size:clamp(14px,1vw,16px);line-height:1.45;color:#efe9dc}
+.rm-dlg__line:last-child{margin-bottom:0}
+.rm-dlg__anim .rm-dlg__line{opacity:0;animation:lineIn .4s ease both;animation-delay:var(--d,0s)}
+.rm-dlg__hint{margin:10px 0 0;font-family:'Press Start 2P',monospace;font-size:clamp(9px,.62vw,10px);letter-spacing:.05em;color:#6f6a86}
+.rm-caret2{color:#5ad6c0;animation:caret 1s steps(1) infinite}
+.rm-hint-m{display:none}
+
+/* 手机端物件目录（桌面隐藏，用 div 以免套用全局 nav 样式） */
+.rm-mnav{display:none}
+@media(max-width:700px){
+  .room{justify-content:flex-start;min-height:100vh;gap:14px}
+  .room__stage{height:auto;width:100%}
+  .rm-dlg{width:calc(100% - 24px)}
+  .rm-dlg__av{width:120px;height:120px}
+  .rm-dlg__line{font-size:15px}
+  .rm-hint-d{display:none}
+  .rm-hint-m{display:inline}
+  #rmPlates{display:none}   /* 手机端房间太小，名牌会互相/与 HUD 重叠；改用下面的目录列表 */
+  #rmHud{display:none!important}   /* 同理，HUD 文字压在小房间上很乱，手机端隐藏（覆盖内联 display） */
+  .rm-mnav{display:flex;flex-direction:column;width:calc(100% - 24px)}
+  .rm-mnav a{display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:0 14px;margin-bottom:8px;
+    font-family:'Press Start 2P',monospace;font-size:11px;letter-spacing:.03em;color:var(--acc,#efe9dc);text-decoration:none;
+    background:rgba(12,10,20,.6);border:1px solid rgba(239,233,220,.16);border-left:3px solid var(--acc,#5ad6c0)}
+  .rm-mnav a:focus-visible{outline:2px solid var(--acc,#efe9dc);outline-offset:2px}
+}
+
+/* 物件热区键盘 focus 提示（选框已在 hoverK 里给出，这里加个兜底描边） */
+.room__stage rect[id^="rmHot"]:focus-visible{outline:2px solid #fff;outline-offset:-1px}
+
+/* reduced-motion：入场 / 逐行 / 呼吸全部静态 */
+@media(prefers-reduced-motion:reduce){
+  #rmLamp{animation:none!important;opacity:1!important}
+  #rmDark{opacity:0!important;transition:none!important}
+  .rm-dlg__anim .rm-dlg__line{animation:none!important;opacity:1!important}
+  .rm-caret2{animation:none!important}
+  #rmHud,#rmPlates,.rm-dlg{transition:none!important}
+}
 
 /* 房间页隐藏顶栏（沉浸），其余 section 恢复 */
 nav.nav--hide{opacity:0;pointer-events:none;transition:opacity .4s ease}
@@ -999,7 +1085,7 @@ nav.nav--hide{opacity:0;pointer-events:none;transition:opacity .4s ease}
    ▼▼▼ 五个 section 换成像素 / 房间风格：像素字标题 + 元信息，正文衬线，诗手写；
         过场动画 + 背景动画都不动（section 不设背景，露出固定背景层）。 ▼▼▼
    ============================================================ */
-/* 顶部导航整条去掉，改用右上角「回到房间」按钮 */
+/* 顶部导航整条去掉（改用房间物件 / 底部目录 / 「回到房间」按钮导航） */
 nav{display:none !important}
 
 /* 每页一个房间同款 accent */
@@ -1122,7 +1208,7 @@ nav{display:none !important}
 
       <!-- 台灯光晕 + 墙上小架 -->
       <svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid meet" style="position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none">
-        <g style="opacity:1">
+        <g id="rmLamp" style="opacity:0;animation:lampOn .5s ease .05s both">
           <polygon points="14,30 40,30 128,144 0,144" fill="#ffcf8a" opacity=".12"></polygon>
           <ellipse cx="62" cy="130" rx="74" ry="18" fill="#ffcf8a" opacity=".1"></ellipse>
         </g>
@@ -1268,61 +1354,49 @@ nav{display:none !important}
         </g>
       </svg>
 
-      <!-- 进场用的黑幕（entered 后淡出，露出房间） -->
-      <div id="rmDark" style="position:absolute;inset:0;background:#06050c;pointer-events:none;z-index:2;opacity:1;transition:opacity 1.1s ease-out"></div>
+      <!-- 进场暗层（不是全黑）：开灯时淡出 -->
+      <div id="rmDark" style="position:absolute;inset:0;background:#06050c;pointer-events:none;z-index:2;opacity:.55;transition:opacity .4s ease-out"></div>
 
       <!-- HUD 顶部 -->
-      <div id="rmHud" style="position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding:clamp(14px,2.2vw,30px);pointer-events:none;z-index:3;opacity:0;transition:opacity .6s ease .35s">
-        <div>
-          <div style="font-family:'Press Start 2P',monospace;font-size:clamp(9px,.86vw,14px);letter-spacing:.06em;color:#f6efd8;text-shadow:0 2px 0 #000">WILLIAM WANG</div>
-          <div style="font-family:'Press Start 2P',monospace;font-size:clamp(6px,.58vw,9px);letter-spacing:.14em;color:#b3a6d6;margin-top:8px;white-space:nowrap">ABOUT &nbsp;/&nbsp; ROOM 01 &mdash; 02:14 AM</div>
-        </div>
-        <div style="font-family:'Press Start 2P',monospace;font-size:clamp(6px,.58vw,9px);letter-spacing:.1em;color:#8f86b5;text-align:right;line-height:2;white-space:nowrap">5 OBJECTS<br><span id="rmFound">0</span> VISITED</div>
+      <div id="rmHud" style="position:absolute;top:clamp(6px,1.2vh,12px);left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding:clamp(8px,1.4vw,16px) clamp(12px,2vw,24px);pointer-events:none;z-index:3;opacity:0;transition:opacity .6s ease .35s">
+        <div style="font-family:'Press Start 2P',monospace;font-size:clamp(9px,.7vw,11px);letter-spacing:.14em;color:#b3a6d6;white-space:nowrap">ROOM 01 &mdash; 02:14 AM</div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:clamp(9px,.7vw,11px);letter-spacing:.1em;color:#8f86b5;text-align:right;line-height:2;white-space:nowrap">5 OBJECTS<br><span id="rmFound">0</span> VISITED</div>
       </div>
 
       <!-- 物件常驻名牌（JS 按物件位置填充）：进来就能看清每个物件是哪个板块 -->
       <div id="rmPlates" style="position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .6s ease .35s"></div>
 
 
-      <!-- 入场存档卡：照片 + 简介 -->
-      <div id="rmIntro" class="room__intro">
-        <div class="room__save">
-          <div style="padding:clamp(14px,1.8vw,22px) clamp(16px,2.2vw,30px);border-bottom:1px solid rgba(239,233,220,.12)">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;font-family:'Press Start 2P',monospace;font-size:clamp(6px,.58vw,9px);letter-spacing:.14em;color:#8f86b5;white-space:nowrap">
-              <span>LOADING SAVE FILE</span>
-              <span>ABOUT / ROOM 01</span>
-            </div>
-            <div style="margin-top:12px;height:4px;background:rgba(239,233,220,.1)">
-              <div style="height:4px;background:#5ad6c0;animation:bootBar 1.5s steps(16) .2s both"></div>
-            </div>
-          </div>
+    </div>
 
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:clamp(18px,2.4vw,36px);padding:clamp(16px,2.2vw,28px) clamp(16px,2.2vw,32px)">
-            <div style="min-width:0">
-              <img src="room/about.jpg" alt="William Wang" style="width:100%;height:clamp(200px,38vh,360px);object-fit:cover;display:block;border:1px solid rgba(239,233,220,.16);animation:wipe 1.2s steps(14) .3s both">
-              <div style="margin-top:12px;font-family:'Press Start 2P',monospace;font-size:8px;letter-spacing:.12em;color:#8f86b5;animation:lineIn .4s ease 1.5s both">PLAYER &mdash; WISEMAN</div>
-            </div>
-            <div style="min-width:0;display:flex;flex-direction:column;justify-content:center">
-              <h1 style="margin:0 0 16px;font-family:'Press Start 2P',monospace;font-weight:400;font-size:clamp(12px,1.15vw,17px);letter-spacing:.04em;line-height:1.6;color:#f6efd8;animation:lineIn .45s ease .2s both">ABOUT ME</h1>
-              <div style="font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;font-size:clamp(12px,1.05vw,16px);line-height:1.7;color:#efe9dc">
-                <p style="margin:0 0 4px;animation:lineIn .5s ease .95s both">I am William Wang, you can call me by my hobbit name: Wiseman.</p>
-                <p style="margin:0 0 4px;animation:lineIn .5s ease 1.2s both">I am multifaceted: I love sports, I love arts, I love research.</p>
-                <p style="margin:0 0 4px;animation:lineIn .5s ease 1.45s both">I&rsquo;ve been exploring who I am in the past few years.</p>
-                <p style="margin:0 0 4px;animation:lineIn .5s ease 1.7s both">I am an extrovert but love to daydream and ponder.</p>
-                <p style="margin:0 0 4px;animation:lineIn .5s ease 1.95s both">I want to plan everything out but am willing to let things flow.</p>
-                <p style="margin:0 0 4px;animation:lineIn .5s ease 2.2s both">I follow my heart but also keep my head.</p>
-                <p style="margin:0;animation:lineIn .5s ease 2.45s both">Anyways, lovely to meet you!</p>
-              </div>
-            </div>
+    <!-- 底部 RPG 对话框（直接进房间后就在屏内） -->
+    <div id="rmDialog" class="rm-dlg" style="opacity:0" aria-live="polite">
+      <div class="rm-dlg__av"><img src="room/about.jpg" alt="William Wang"></div>
+      <div class="rm-dlg__main">
+        <div class="rm-dlg__name">WISEMAN<span id="rmDlgTag" class="rm-dlg__tag"></span></div>
+        <div class="rm-dlg__body" id="rmDlgBody">
+          <div id="rmDlgIntro">
+            <p class="rm-dlg__line" style="--d:0s">I am William Wang, you can call me by my hobbit name: Wiseman.</p>
+            <p class="rm-dlg__line" style="--d:.12s">I am multifaceted: I love sports, I love arts, I love research.</p>
+            <p class="rm-dlg__line" style="--d:.24s">I&rsquo;ve been exploring who I am in the past few years.</p>
+            <p class="rm-dlg__line" style="--d:.36s">I am an extrovert but love to daydream and ponder.</p>
+            <p class="rm-dlg__line" style="--d:.48s">I want to plan everything out but am willing to let things flow.</p>
+            <p class="rm-dlg__line" style="--d:.6s">I follow my heart but also keep my head.</p>
+            <p class="rm-dlg__line" style="--d:.72s">Anyways, lovely to meet you!</p>
           </div>
-
-          <div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:clamp(16px,2vw,24px);border-top:1px solid rgba(239,233,220,.12);font-family:'Press Start 2P',monospace;font-size:clamp(7px,.6vw,10px);letter-spacing:.12em;color:#5ad6c0;animation:lineIn .4s ease 2.9s both">
-            <span style="animation:caret 1s steps(1) infinite">&#9654;</span>
-            <span style="white-space:nowrap">PRESS ANY KEY / CLICK TO ENTER THE ROOM</span>
-          </div>
+          <p class="rm-dlg__line" id="rmDlgMsg" hidden></p>
         </div>
+        <p class="rm-dlg__hint"><span class="rm-caret2">&#9654;</span> <span class="rm-hint-d">Click anything on my desk to look around</span><span class="rm-hint-m">Tap a section below</span></p>
       </div>
+    </div>
 
+    <!-- 手机端物件目录（≥ 44px 点击行；桌面隐藏） -->
+    <div id="rmMobileNav" class="rm-mnav" role="navigation" aria-label="Sections">
+      <a href="#ai"     style="--acc:#5ad6c0">AI &amp; Society<span aria-hidden="true">&rsaquo;</span></a>
+      <a href="#visual" style="--acc:#e0b15a">Visual &amp; Media<span aria-hidden="true">&rsaquo;</span></a>
+      <a href="#rowing" style="--acc:#6aa9dd">Rowing &amp; Fitness<span aria-hidden="true">&rsaquo;</span></a>
+      <a href="#music"  style="--acc:#dd7f63">Music<span aria-hidden="true">&rsaquo;</span></a>
+      <a href="#people" style="--acc:#b892dd">People<span aria-hidden="true">&rsaquo;</span></a>
     </div>
   </div>
 </section>
@@ -1814,9 +1888,9 @@ nav{display:none !important}
 <footer>
   <div class="footer__links">
     <a href="mailto:williamwang5277@gmail.com">Email</a>
-    <a href="#" onclick="return false" data-todo="cv">CV</a>
-    <a href="#" onclick="return false" data-todo="linkedin">LinkedIn</a>
-    <a href="#" onclick="return false" data-todo="instagram">Instagram</a>
+    <!-- TODO(Wiseman): CV 链接 —— 建议把 CV PDF 放进仓库，用相对路径，例如 <a href="cv.pdf" target="_blank" rel="noopener">CV (PDF)</a> -->
+    <!-- TODO(Wiseman): LinkedIn 地址 —— 有就 <a href="https://www.linkedin.com/in/xxx" target="_blank" rel="noopener">LinkedIn</a> -->
+    <!-- TODO(Wiseman): Instagram 地址 —— 有就 <a href="https://instagram.com/xxx" target="_blank" rel="noopener">Instagram</a> -->
   </div>
   <p class="copy" style="margin-top:clamp(24px,4vw,36px);font-size:12px;color:var(--muted)">© 2026 William Wang</p>
 </footer>
@@ -1848,8 +1922,7 @@ window.addEventListener('hashchange', function () { transitionTo(location.hash.s
   var nav = document.querySelector('nav');
   window.__updateNav = function () {
     var home = document.getElementById('p-about').classList.contains('on');
-    nav.classList.toggle('solid', !home || window.scrollY > 80);
-    nav.classList.toggle('nav--hide', home);   // 房间页沉浸：隐藏顶栏，靠房间物件导航
+    nav.classList.toggle('solid', !home || window.scrollY > 80);   // 顶栏常驻，房间页也不再隐藏
     var tr = document.getElementById('toRoom'); // 「回到房间」按钮：只在 section 页出现
     if (tr) tr.hidden = home;
   };
@@ -2529,29 +2602,36 @@ window.addEventListener('hashchange', function () { transitionTo(location.hash.s
 </script>
 
 
-<!-- ▼▼▼ About Room 交互：存档卡 → 房间 → 物件常驻名牌 + 底部快捷目录 → 点击直达老 section ▼▼▼ -->
+<!-- ▼▼▼ About Room 交互 v4：直接进房间 + 底部对话框（7 行自述，逐行出现）+ 悬停预览 ▼▼▼ -->
 <script>
 (function () {
   var room = document.getElementById('room');
   if (!room) return;
 
-  var intro   = document.getElementById('rmIntro');
+  var reduce   = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var canHover = window.matchMedia('(hover: hover)').matches;
+
   var dark    = document.getElementById('rmDark');
   var hud     = document.getElementById('rmHud');
-  var dir     = document.getElementById('rmDir');
   var plates  = document.getElementById('rmPlates');
   var foundEl = document.getElementById('rmFound');
   var selG    = document.getElementById('rmSel');
   var selFill = document.getElementById('rmSelFill');
   var selStr  = document.getElementById('rmSelStroke');
 
+  var dialog  = document.getElementById('rmDialog');
+  var dlgBody = document.getElementById('rmDlgBody');
+  var dlgIntro= document.getElementById('rmDlgIntro');
+  var dlgMsg  = document.getElementById('rmDlgMsg');
+  var dlgTag  = document.getElementById('rmDlgTag');
+
   var order = ['ai', 'visual', 'rowing', 'music', 'people'];
   var meta = {
-    ai:     { accent: '#5ad6c0', hash: '#ai',     label: 'AI & Society' },
-    visual: { accent: '#e0b15a', hash: '#visual', label: 'Visual & Media' },
-    rowing: { accent: '#6aa9dd', hash: '#rowing', label: 'Rowing & Fitness' },
-    music:  { accent: '#dd7f63', hash: '#music',  label: 'Music' },
-    people: { accent: '#b892dd', hash: '#people', label: 'People' }
+    ai:     { accent: '#5ad6c0', hash: '#ai',     label: 'AI & Society',     preview: 'Major related Passion Projects. Investigating the topic of AI usage among senior citizens.' },
+    visual: { accent: '#e0b15a', hash: '#visual', label: 'Visual & Media',   preview: 'Technical Director, PTV Studio. I film the life between bells.' },
+    rowing: { accent: '#6aa9dd', hash: '#rowing', label: 'Rowing & Fitness', preview: 'Rowing since G10, key member in the team, participating multiple games and learned team spirit.' },
+    music:  { accent: '#dd7f63', hash: '#music',  label: 'Music',            preview: 'My two favorite artists: Zach Bryan and Imagine Dragons. I have found resonance within the lines.' },
+    people: { accent: '#b892dd', hash: '#people', label: 'People',           preview: 'Two people who changed how I see the world.' }
   };
   var spots = {
     music:  { x: 48,  y: 100, w: 60,  h: 27 },
@@ -2563,7 +2643,7 @@ window.addEventListener('hashchange', function () { transitionTo(location.hash.s
 
   var entered = false, seen = [], plateEls = {};
 
-  // 建立每个物件旁的常驻名牌
+  // 常驻名牌（所有物件同等权重，不加特殊标记）
   order.forEach(function (k) {
     var m = meta[k], b = spots[k];
     var el = document.createElement('div');
@@ -2571,10 +2651,10 @@ window.addEventListener('hashchange', function () { transitionTo(location.hash.s
     el.textContent = m.label;
     el.style.color = m.accent;
     el.style.left = Math.max(13, Math.min(87, (b.x + b.w / 2) / 320 * 100)) + '%';
-    if (k === 'ai') {   // 显示器很大，名牌放屏幕上方墓上
+    if (k === 'ai') {   // 显示器很大，名牌放屏幕上方，避免压住键盘
       el.style.top = (b.y / 180 * 100) + '%';
       el.style.transform = 'translate(-50%,calc(-100% - 6px))';
-    } else {            // 其余物件名牌放下方
+    } else {
       el.style.top = ((b.y + b.h) / 180 * 100) + '%';
       el.style.transform = 'translate(-50%,6px)';
     }
@@ -2582,7 +2662,7 @@ window.addEventListener('hashchange', function () { transitionTo(location.hash.s
     plateEls[k] = el;
   });
 
-  var dirLinks = Array.prototype.slice.call(document.querySelectorAll('#rmDir .rmdir'));
+  function hlPlate(k) { order.forEach(function (kk) { plateEls[kk].classList.toggle('hot', kk === k); }); }
 
   function setSel(k) {
     if (!k) { selG.style.opacity = 0; return; }
@@ -2594,55 +2674,81 @@ window.addEventListener('hashchange', function () { transitionTo(location.hash.s
     selG.style.opacity = 1;
   }
 
-  // 高亮联动：物件选框 + 名牌变亮 + 目录项下划线
-  function hoverK(k) {
-    setSel(k);
-    order.forEach(function (kk) { plateEls[kk].classList.toggle('hot', kk === k); });
-    dirLinks.forEach(function (a) { a.classList.toggle('hot', a.getAttribute('data-k') === k); });
+  // 固定对话框正文高度 = 7 行自述高度，避免悬停预览时跳动
+  function lockBodyHeight() {
+    if (!dlgMsg.hidden) return;           // 预览中不测量
+    dlgBody.style.minHeight = '';
+    dlgBody.style.minHeight = dlgIntro.offsetHeight + 'px';
   }
 
-  function enter() {
-    if (entered) return;
-    entered = true;
-    intro.classList.add('gone');
-    dark.style.opacity = 0;
-    hud.style.opacity = 1;
-    if (dir) dir.style.opacity = 1;
-    if (plates) plates.style.opacity = 1;
+  // 逐行出现：结束/跳过后移除动画类，之后 hover 还原不再重播
+  var revealTimer = null;
+  function finishReveal() { dlgIntro.classList.remove('rm-dlg__anim'); if (revealTimer) { clearTimeout(revealTimer); revealTimer = null; } }
+
+  function showPreview(k) {
+    finishReveal();
+    var m = meta[k];
+    dlgMsg.textContent = m.preview; dlgMsg.hidden = false; dlgIntro.hidden = true;
+    dlgTag.textContent = ' / ' + m.label; dlgTag.style.setProperty('--dlgacc', m.accent);
   }
-  window.__roomEnter = enter;   // 供「回到房间」按钮直接进桌面场景
+  function clearPreview() {
+    dlgMsg.hidden = true; dlgIntro.hidden = false; dlgTag.textContent = '';
+  }
+  function hoverK(k) {
+    setSel(k); hlPlate(k);
+    if (k) showPreview(k); else clearPreview();
+  }
 
   function mark(k) { if (seen.indexOf(k) < 0) { seen.push(k); foundEl.textContent = seen.length; } }
+  function go(k) { mark(k); hoverK(null); location.hash = meta[k].hash; }
 
-  function go(k) {
-    mark(k);
-    hoverK(null);
-    location.hash = meta[k].hash;   // → hashchange → transitionTo → 老 section
+  function enter() {
+    if (entered) return; entered = true;
+    if (dark) dark.style.opacity = 0;
+    if (hud) hud.style.opacity = 1;
+    if (plates) plates.style.opacity = 1;
+    if (dialog) dialog.style.opacity = 1;
   }
+  window.__roomEnter = enter;
 
-  // 物件点击区
+  // 物件热区：鼠标 + 键盘可用，focus 也触发预览
   order.forEach(function (k) {
     var el = document.getElementById('rmHot' + k.charAt(0).toUpperCase() + k.slice(1));
     if (!el) return;
-    el.addEventListener('mouseenter', function () { hoverK(k); });
-    el.addEventListener('mouseleave', function () { hoverK(null); });
-    el.addEventListener('click', function () { enter(); go(k); });
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('role', 'link');
+    el.setAttribute('aria-label', meta[k].label);
+    if (canHover) {
+      el.addEventListener('mouseenter', function () { hoverK(k); });
+      el.addEventListener('mouseleave', function () { hoverK(null); });
+    }
+    el.addEventListener('focus', function () { hoverK(k); });
+    el.addEventListener('blur',  function () { hoverK(null); });
+    el.addEventListener('click', function () { go(k); });
+    el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(k); } });
   });
 
-  // 底部目录：悬停联动高亮对应物件，点击直接进入
-  dirLinks.forEach(function (a) {
-    var k = a.getAttribute('data-k');
-    a.addEventListener('mouseenter', function () { hoverK(k); });
-    a.addEventListener('mouseleave', function () { hoverK(null); });
-    a.addEventListener('click', function () { enter(); mark(k); hoverK(null); });
-  });
-
-  intro.addEventListener('click', enter);
-
+  // 出现动画进行时：点对话框 / 按任意键 → 立即显示全部
+  if (dialog) dialog.addEventListener('click', finishReveal);
   window.addEventListener('keydown', function () {
     if (!document.getElementById('p-about').classList.contains('on')) return;
-    if (!entered) enter();
+    finishReveal();
   });
+
+  window.addEventListener('resize', function () { lockBodyHeight(); });
+
+  // ---- 启动：直接进房间 ----
+  enter();
+  var seenBefore = false;
+  try { seenBefore = !!sessionStorage.getItem('wiseman_room_seen'); sessionStorage.setItem('wiseman_room_seen', '1'); } catch (e) {}
+  if (!reduce && !seenBefore) {
+    dlgIntro.classList.add('rm-dlg__anim');
+    revealTimer = setTimeout(finishReveal, 1300);
+  }
+  // 等字体/布局稳定后再锁定高度
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(lockBodyHeight);
+  setTimeout(lockBodyHeight, 60);
+  setTimeout(lockBodyHeight, 400);
 })();
 </script>
 
