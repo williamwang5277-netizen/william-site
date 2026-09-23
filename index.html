@@ -41,8 +41,8 @@
   --c-about :#E8E6E1;  /* 白   15.87:1 */
   --c-ai    :#A8BD55;  /* 绿    9.50:1 */
   --c-visual:#D4AF37;  /* 金    9.42:1 */
-  --c-rowing:#E8604C;  /* 红    5.85:1 */
-  --c-music :#7EB6E8;  /* 蓝    9.19:1 */
+  --c-rowing:#6aa9dd;  /* 蓝（rowing 用蓝，和房间里赛艇同色） */
+  --c-music :#E8604C;  /* 红（music 用红） */
   --c-people:#EE9BB5;  /* 粉    9.42:1 */
 
   /* 英文用 Rockwell（板衬线）；中文自动落到后面的 PingFang / 雅黑 */
@@ -724,13 +724,13 @@ body:has(#p-people.on) .bgp{opacity:1}
 .fx__split{visibility:hidden}
 .fx__split.on{visibility:visible}
 .fx__split .p{position:absolute;top:0;bottom:0;width:52vw;
-  background:linear-gradient(180deg,#9a2f22 0%,#5a140d 62%,#3c0d08 100%)}
+  background:linear-gradient(180deg,#2a6f9a 0%,#123f5a 62%,#0a2434 100%)}
 .fx__split .l{left:0;transform:translateX(-104%)}
 .fx__split .r{right:0;transform:translateX(104%)}
 /* 中缝水花高光 */
 .fx__split .p::after{content:'';position:absolute;top:0;bottom:0;width:16px}
-.fx__split .l::after{right:-1px;background:linear-gradient(90deg,transparent,rgba(255,238,232,.55))}
-.fx__split .r::after{left:-1px;background:linear-gradient(90deg,rgba(255,238,232,.55),transparent)}
+.fx__split .l::after{right:-1px;background:linear-gradient(90deg,transparent,rgba(210,236,255,.55))}
+.fx__split .r::after{left:-1px;background:linear-gradient(90deg,rgba(210,236,255,.55),transparent)}
 /* 合拢盖住 */
 .fx__split.close .l{animation:fxSplitCloseL .42s cubic-bezier(.4,0,.3,1) both}
 .fx__split.close .r{animation:fxSplitCloseR .42s cubic-bezier(.4,0,.3,1) both}
