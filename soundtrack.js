@@ -14,7 +14,7 @@
   var title = document.getElementById('soundTitle');
   var status = document.getElementById('soundStatus');
   var player, ready = false, apiPromise, initTimer, loadTimer, resolveReady, rejectReady;
-  var current = '', indexes = {}, generation = 0, enabled = false, playing = false, loadedVideo = '', level = 22;
+  var current = '', indexes = {}, generation = 0, enabled = true, playing = false, waitingForGesture = true, loadedVideo = '', level = 22;
   try { var stored = localStorage.getItem('william-sound-volume'); if (stored !== null && isFinite(Number(stored))) level = Math.max(0, Math.min(100, Number(stored))); } catch (_) {}
   function track() { return tracks[current] || tracks.about; }
   function video() { return track().videos[indexes[current] || 0]; }
@@ -30,7 +30,7 @@
     title.title = track().title + ' — ' + track().artist + (track().edition ? ' · ' + track().edition : '') + ' · Open on YouTube';
   }
   function pause() {
-    generation++; enabled = playing = false;
+    generation++; enabled = playing = waitingForGesture = false;
     clearTimeout(loadTimer);
     if (ready) player.pauseVideo();
     dock.classList.remove('is-loading');
@@ -83,7 +83,7 @@
               if (id && id !== video()) return;
               if (event.data === YT.PlayerState.PLAYING) {
                 if (!enabled) { player.pauseVideo(); return; }
-                clearTimeout(loadTimer); playing = true;
+                clearTimeout(loadTimer); playing = true; waitingForGesture = false;
                 dock.classList.remove('is-loading', 'has-error');
                 setStatus('Playing ' + track().title + ' by ' + track().artist);
               } else if (event.data === YT.PlayerState.ENDED && enabled) {
@@ -97,7 +97,12 @@
               if (id && id !== video()) return;
               retrySource(event.data);
             },
-            onAutoplayBlocked: function () { fail('Tap the music button again to start playback.'); }
+            onAutoplayBlocked: function () {
+              if (!enabled || track().externalOnly) return;
+              pause(); waitingForGesture = true;
+              setStatus('Tap the page or music button to start music.');
+              toggle.title = 'Tap the page or music button to start music';
+            }
           }
         });
       }
@@ -116,13 +121,12 @@
     });
     return apiPromise;
   }
-  async function play(restart) {
+  function play(restart) {
     enabled = true; playing = false;
     var token = ++generation, selected = track(), selectedVideo = video();
     dock.classList.remove('has-error'); dock.classList.add('is-loading');
     setStatus('Loading ' + selected.title); render();
-    try {
-      await youtube();
+    function start() {
       if (token !== generation || !enabled) return;
       player.setVolume(level);
       clearTimeout(loadTimer);
@@ -131,7 +135,11 @@
         loadedVideo = selectedVideo;
         player.loadVideoById({ videoId: selectedVideo, startSeconds: selected.start || 0, endSeconds: selected.end });
       } else player.playVideo();
-    } catch (error) { if (token === generation) fail(error.message); }
+    }
+    function failed(error) { if (token === generation) fail(error.message); }
+    // Use the ready player immediately so a click retains browser activation.
+    if (ready) { try { start(); } catch (error) { failed(error); } }
+    else youtube().then(start).catch(failed);
   }
   function selectPage(id) {
     id = tracks[id] ? id : 'about';
@@ -150,6 +158,15 @@
     else play(loadedVideo !== video());
   });
   title.addEventListener('click', pause);
+  function startAfterGesture(event) {
+    if (!waitingForGesture || !ready || playing || track().externalOnly) return;
+    if (event.target && dock.contains(event.target)) return;
+    if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
+    waitingForGesture = false;
+    play(loadedVideo !== video());
+  }
+  window.addEventListener('click', startAfterGesture);
+  window.addEventListener('keydown', startAfterGesture);
   setInterval(function () {
     if (!enabled || !ready || !playing || !track().end) return;
     if (player.getCurrentTime() >= track().end - 0.15) { player.seekTo(track().start || 0, true); player.playVideo(); }
