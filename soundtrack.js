@@ -1,4 +1,4 @@
-/* Per-page music. Candidate embeds are tried in order when a source is unavailable. */
+/* Per-page music from supplied audio files or YouTube embeds. */
 (function () {
   'use strict';
   var tracks = {
@@ -6,23 +6,24 @@
     visual: { title: 'Ariana', artist: 'Tony Anderson', videos: ['ciqRQJqfQBA'] },
     music: { title: 'Rise Up', artist: 'Imagine Dragons', videos: ['JHQ1YiPCWXc'], start: 180, end: 240, edition: 'Live · March Madness 2018' },
     ai: { title: 'Resonance', artist: 'HOME', videos: ['8GW6sLrK40k'] },
-    people: { title: 'Aeroplane', artist: 'Zach Bryan', videos: ['i67_2rHNQGE'], edition: 'Early recording · 89-second clip' },
-    rowing: { title: 'Thunder', artist: 'Imagine Dragons', videos: ['4AqjqOqNrjw'], edition: 'Official studio audio · listen on YouTube', externalOnly: true }
+    people: { title: 'Stick Season', artist: 'José Audisio', src: 'assets/audio/stick-season-jose-audisio.mp3', videos: ['YZpUpc6jLrY'], edition: 'Acoustic cover · Noah Kahan' },
+    rowing: { title: 'Thunder', artist: 'Imagine Dragons', src: 'assets/audio/thunder.mp3', videos: ['4AqjqOqNrjw'], edition: 'Official studio audio' }
   };
   var dock = document.getElementById('soundtrack');
   var toggle = document.getElementById('soundToggle');
   var title = document.getElementById('soundTitle');
   var status = document.getElementById('soundStatus');
   var player, ready = false, apiPromise, initTimer, loadTimer, resolveReady, rejectReady;
+  var audio, loadedAudio = '';
   var current = '', indexes = {}, generation = 0, enabled = true, playing = false, waitingForGesture = true, loadedVideo = '', level = 22;
   try { var stored = localStorage.getItem('william-sound-volume'); if (stored !== null && isFinite(Number(stored))) level = Math.max(0, Math.min(100, Number(stored))); } catch (_) {}
   function track() { return tracks[current] || tracks.about; }
   function video() { return track().videos[indexes[current] || 0]; }
   function setStatus(text) { status.textContent = text; }
   function render() {
-    toggle.setAttribute('aria-label', track().externalOnly ? 'Listen to Thunder on YouTube' : enabled ? 'Pause soundtrack' : 'Play soundtrack');
-    toggle.setAttribute('aria-pressed', String(enabled && !track().externalOnly));
-    toggle.title = track().externalOnly ? 'Open the official studio audio on YouTube' : enabled ? 'Pause music' : 'Play music';
+    toggle.setAttribute('aria-label', enabled ? 'Pause soundtrack' : 'Play soundtrack');
+    toggle.setAttribute('aria-pressed', String(enabled));
+    toggle.title = enabled ? 'Pause music' : 'Play music';
     dock.classList.toggle('is-playing', playing);
   }
   function updateLink() {
@@ -33,12 +34,19 @@
     generation++; enabled = playing = waitingForGesture = false;
     clearTimeout(loadTimer);
     if (ready) player.pauseVideo();
+    if (audio) audio.pause();
     dock.classList.remove('is-loading');
     setStatus('Music paused'); render();
   }
   function fail(message) {
     pause(); dock.classList.add('has-error');
     setStatus(message); toggle.title = message + ' Click to retry.';
+  }
+  function blocked() {
+    if (!enabled) return;
+    pause(); waitingForGesture = true;
+    setStatus('Tap the page or music button to start music.');
+    toggle.title = 'Tap the page or music button to start music';
   }
   function retrySource(code) {
     if (!enabled) return;
@@ -79,6 +87,7 @@
               player.getIframe().setAttribute('tabindex', '-1');
             },
             onStateChange: function (event) {
+              if (track().src) { if (event.data === YT.PlayerState.PLAYING) player.pauseVideo(); return; }
               var id = (player.getVideoData() || {}).video_id;
               if (id && id !== video()) return;
               if (event.data === YT.PlayerState.PLAYING) {
@@ -92,16 +101,13 @@
               render();
             },
             onError: function (event) {
-              if (!ready) return;
+              if (!ready || track().src) return;
               var id = (player.getVideoData() || {}).video_id;
               if (id && id !== video()) return;
               retrySource(event.data);
             },
             onAutoplayBlocked: function () {
-              if (!enabled || track().externalOnly) return;
-              pause(); waitingForGesture = true;
-              setStatus('Tap the page or music button to start music.');
-              toggle.title = 'Tap the page or music button to start music';
+              if (!track().src) blocked();
             }
           }
         });
@@ -126,6 +132,47 @@
     var token = ++generation, selected = track(), selectedVideo = video();
     dock.classList.remove('has-error'); dock.classList.add('is-loading');
     setStatus('Loading ' + selected.title); render();
+    if (selected.src) {
+      if (ready) player.pauseVideo();
+      if (!audio || loadedAudio !== selected.src) {
+        if (audio) audio.pause();
+        audio = new Audio(selected.src); loadedAudio = selected.src;
+        audio.loop = true; audio.preload = 'auto';
+        var localAudio = audio;
+        audio.addEventListener('playing', function () {
+          if (audio !== localAudio || track().src !== selected.src) return;
+          if (!enabled) { localAudio.pause(); return; }
+          clearTimeout(loadTimer); playing = true; waitingForGesture = false;
+          dock.classList.remove('is-loading', 'has-error');
+          setStatus('Playing ' + selected.title + ' by ' + selected.artist); render();
+        });
+        audio.addEventListener('pause', function () {
+          if (audio !== localAudio || track().src !== selected.src) return;
+          playing = false; render();
+        });
+        audio.addEventListener('error', function () {
+          if (audio === localAudio && track().src === selected.src && enabled) fail('Audio could not load. Click the music button to retry.');
+        });
+      }
+      audio.volume = level / 100;
+      if (restart) audio.currentTime = 0;
+      clearTimeout(loadTimer);
+      loadTimer = setTimeout(function () {
+        if (token === generation && enabled && !playing) fail('Audio could not load. Click the music button to retry.');
+      }, 15000);
+      try {
+        var result = audio.play();
+        if (result && result.catch) result.catch(function (error) {
+          if (token !== generation || !enabled) return;
+          if (error.name === 'NotAllowedError') blocked();
+          else fail('Audio could not play. Click the music button to retry.');
+        });
+      } catch (error) {
+        if (error.name === 'NotAllowedError') blocked();
+        else fail('Audio could not play. Click the music button to retry.');
+      }
+      return;
+    }
     function start() {
       if (token !== generation || !enabled) return;
       player.setVolume(level);
@@ -147,28 +194,28 @@
     var resume = enabled;
     generation++; clearTimeout(loadTimer); current = id; playing = false;
     if (ready) player.stopVideo();
+    if (audio) { var previousAudio = audio; audio = null; loadedAudio = ''; previousAudio.pause(); }
     title.textContent = track().title; updateLink(); dock.dataset.page = id;
     dock.classList.remove('has-error', 'is-loading');
-    setStatus(track().externalOnly ? 'Studio audio is available on YouTube. Click the song name or music button.' : resume ? 'Loading ' + track().title : 'Sound off · tap the music button'); render();
-    if (resume && !track().externalOnly) play(true);
+    setStatus(resume ? 'Loading ' + track().title : 'Sound off · tap the music button'); render();
+    if (resume) play(true);
   }
   toggle.addEventListener('click', function () {
-    if (track().externalOnly) { pause(); window.open(title.href, '_blank', 'noopener,noreferrer'); }
-    else if (enabled) pause();
-    else play(loadedVideo !== video());
+    if (enabled) pause();
+    else play(track().src ? loadedAudio !== track().src : loadedVideo !== video());
   });
   title.addEventListener('click', pause);
   function startAfterGesture(event) {
-    if (!waitingForGesture || !ready || playing || track().externalOnly) return;
+    if (!waitingForGesture || (!track().src && !ready) || playing) return;
     if (event.target && dock.contains(event.target)) return;
     if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
     waitingForGesture = false;
-    play(loadedVideo !== video());
+    play(track().src ? loadedAudio !== track().src : loadedVideo !== video());
   }
   window.addEventListener('click', startAfterGesture);
   window.addEventListener('keydown', startAfterGesture);
   setInterval(function () {
-    if (!enabled || !ready || !playing || !track().end) return;
+    if (!enabled || track().src || !ready || !playing || !track().end) return;
     if (player.getCurrentTime() >= track().end - 0.15) { player.seekTo(track().start || 0, true); player.playVideo(); }
   }, 500);
   window.addEventListener('portfolio:page', function (event) { selectPage(event.detail); });
