@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>William Wang — Portfolio</title>
-<link rel="stylesheet" href="soundtrack.css">
+<link rel="stylesheet" href="soundtrack.css?v=play-hint-20261011">
 
 <!-- About Room 用到的像素字 + 衬线字 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2763,11 +2763,14 @@ window.addEventListener('hashchange', function () { transitionTo(location.hash.s
 
 
 <aside class="soundtrack" id="soundtrack" aria-label="Page soundtrack">
-  <button class="soundtrack__toggle" id="soundToggle" type="button" aria-label="Play soundtrack" aria-pressed="false" title="Play music"><span aria-hidden="true">♫</span></button>
-  <a class="soundtrack__title" id="soundTitle" href="https://www.youtube.com/watch?v=1b2tW9JMSfQ&amp;t=202s" target="_blank" rel="noopener noreferrer">Strawberry Lemonade</a>
+  <button class="soundtrack__toggle" id="soundToggle" type="button" aria-label="Play soundtrack" aria-pressed="false" title="Play music"><span id="soundIcon" aria-hidden="true">▶</span></button>
+  <div class="soundtrack__info">
+    <span class="soundtrack__hint" id="soundHint" aria-hidden="true">Play music</span>
+    <a class="soundtrack__title" id="soundTitle" href="https://www.youtube.com/watch?v=1b2tW9JMSfQ&amp;t=202s" target="_blank" rel="noopener noreferrer">Strawberry Lemonade</a>
+  </div>
   <p class="soundtrack__status" id="soundStatus" role="status" aria-live="polite">Sound off · tap the music button</p>
   <div class="soundtrack__engine" id="soundVideoWrap" aria-hidden="true"><div id="soundVideo"></div></div>
 </aside>
-<script src="soundtrack.js?v=local-audio-20261011"></script>
+<script src="soundtrack.js?v=rise-up-hint-20261011"></script>
 </body>
 </html>

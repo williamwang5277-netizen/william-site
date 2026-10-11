@@ -4,13 +4,15 @@
   var tracks = {
     about: { title: 'Strawberry Lemonade', artist: 'Purrple Cat', videos: ['1b2tW9JMSfQ'], start: 202, end: 358 },
     visual: { title: 'Ariana', artist: 'Tony Anderson', videos: ['ciqRQJqfQBA'] },
-    music: { title: 'Rise Up', artist: 'Imagine Dragons', videos: ['JHQ1YiPCWXc'], start: 180, end: 240, edition: 'Live · March Madness 2018' },
+    music: { title: 'Rise Up', artist: 'Imagine Dragons', src: 'assets/audio/rise-up.mp3', videos: ['LP5lRTh3K7I'], start: 59.8, edition: 'Studio recording' },
     ai: { title: 'Resonance', artist: 'HOME', videos: ['8GW6sLrK40k'] },
     people: { title: 'Stick Season', artist: 'José Audisio', src: 'assets/audio/stick-season-jose-audisio.mp3', videos: ['YZpUpc6jLrY'], edition: 'Acoustic cover · Noah Kahan' },
     rowing: { title: 'Thunder', artist: 'Imagine Dragons', src: 'assets/audio/thunder.mp3', videos: ['4AqjqOqNrjw'], edition: 'Official studio audio' }
   };
   var dock = document.getElementById('soundtrack');
   var toggle = document.getElementById('soundToggle');
+  var icon = document.getElementById('soundIcon');
+  var hint = document.getElementById('soundHint');
   var title = document.getElementById('soundTitle');
   var status = document.getElementById('soundStatus');
   var player, ready = false, apiPromise, initTimer, loadTimer, resolveReady, rejectReady;
@@ -24,10 +26,12 @@
     toggle.setAttribute('aria-label', enabled ? 'Pause soundtrack' : 'Play soundtrack');
     toggle.setAttribute('aria-pressed', String(enabled));
     toggle.title = enabled ? 'Pause music' : 'Play music';
+    icon.textContent = enabled ? 'Ⅱ' : '▶';
+    hint.textContent = dock.classList.contains('has-error') ? 'Retry music' : playing ? 'Playing' : enabled ? 'Loading…' : 'Play music';
     dock.classList.toggle('is-playing', playing);
   }
   function updateLink() {
-    title.href = 'https://www.youtube.com/watch?v=' + video() + (track().start ? '&t=' + track().start + 's' : '');
+    title.href = 'https://www.youtube.com/watch?v=' + video() + (track().start ? '&t=' + Math.floor(track().start) + 's' : '');
     title.title = track().title + ' — ' + track().artist + (track().edition ? ' · ' + track().edition : '') + ' · Open on YouTube';
   }
   function pause() {
@@ -39,7 +43,7 @@
     setStatus('Music paused'); render();
   }
   function fail(message) {
-    pause(); dock.classList.add('has-error');
+    pause(); dock.classList.add('has-error'); render();
     setStatus(message); toggle.title = message + ' Click to retry.';
   }
   function blocked() {
@@ -137,8 +141,11 @@
       if (!audio || loadedAudio !== selected.src) {
         if (audio) audio.pause();
         audio = new Audio(selected.src); loadedAudio = selected.src;
-        audio.loop = true; audio.preload = 'auto';
+        audio.loop = !selected.start; audio.preload = 'auto';
         var localAudio = audio;
+        audio.addEventListener('ended', function () {
+          if (audio === localAudio && track().src === selected.src && enabled) play(true);
+        });
         audio.addEventListener('playing', function () {
           if (audio !== localAudio || track().src !== selected.src) return;
           if (!enabled) { localAudio.pause(); return; }
@@ -155,7 +162,7 @@
         });
       }
       audio.volume = level / 100;
-      if (restart) audio.currentTime = 0;
+      if (restart) audio.currentTime = selected.start || 0;
       clearTimeout(loadTimer);
       loadTimer = setTimeout(function () {
         if (token === generation && enabled && !playing) fail('Audio could not load. Click the music button to retry.');

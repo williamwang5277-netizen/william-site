@@ -1,11 +1,13 @@
 .soundtrack{--sound-accent:#8ac6b7;position:fixed;right:max(20px,env(safe-area-inset-right));bottom:max(20px,env(safe-area-inset-bottom));z-index:900;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 40px);padding:6px 14px 6px 6px;border:1px solid #ffffff18;border-radius:30px;background:rgba(12,10,23,.88);box-shadow:0 4px 18px #0003;color:#efe9dc;font:11px/1.5 'IBM Plex Mono',monospace}
 .soundtrack[data-page=visual]{--sound-accent:#b892dd}.soundtrack[data-page=music]{--sound-accent:#dd7f63}.soundtrack[data-page=ai]{--sound-accent:#6fae97}.soundtrack[data-page=people]{--sound-accent:#d6a65a}.soundtrack[data-page=rowing]{--sound-accent:#6aa9dd}
-.soundtrack__toggle{display:grid;place-items:center;flex:none;width:36px;height:36px;padding:0;border:1px solid var(--sound-accent);border-radius:50%;background:transparent;color:var(--sound-accent);font:19px/1 monospace;cursor:pointer;opacity:.65;transition:opacity .2s,background .2s}
-.soundtrack__toggle:hover{opacity:1;background:#ffffff0c}
+.soundtrack__toggle{display:grid;place-items:center;flex:none;width:40px;height:40px;padding:0;border:1px solid var(--sound-accent);border-radius:50%;background:color-mix(in srgb,var(--sound-accent) 12%,transparent);color:var(--sound-accent);font:16px/1 sans-serif;cursor:pointer;transition:background .2s,transform .2s}
+.soundtrack__toggle:hover{background:color-mix(in srgb,var(--sound-accent) 22%,transparent);transform:scale(1.04)}
 .soundtrack.is-playing .soundtrack__toggle{opacity:1;box-shadow:0 0 10px color-mix(in srgb,var(--sound-accent) 25%,transparent)}
-.soundtrack.is-playing .soundtrack__toggle span{animation:soundTurn 8s linear infinite}
 .soundtrack.is-loading .soundtrack__toggle{animation:soundBreathe 1.2s ease-in-out infinite}
 .soundtrack.has-error .soundtrack__toggle{border-style:dashed;opacity:.5}
+.soundtrack__info{display:flex;flex-direction:column;min-width:0;gap:1px}
+.soundtrack__hint{color:#c4becd;font:10px/1.4 'IBM Plex Mono',monospace;letter-spacing:.02em}
+.soundtrack.is-playing .soundtrack__hint{color:var(--sound-accent)}
 .soundtrack__title{display:block;min-width:0;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sound-accent);text-decoration:none}
 .soundtrack__title:hover{text-decoration:underline;text-underline-offset:4px}
 .soundtrack__toggle:focus-visible,.soundtrack__title:focus-visible{outline:2px solid #efe9dc;outline-offset:4px}
@@ -13,6 +15,5 @@
 .soundtrack__engine{position:fixed;left:-1000px;top:0;width:320px;height:200px;overflow:hidden;pointer-events:none}
 .soundtrack__engine iframe{width:320px;height:200px;border:0}
 footer{padding-bottom:90px}
-@keyframes soundTurn{to{transform:rotate(360deg)}}
 @keyframes soundBreathe{50%{opacity:.3}}
-@media(prefers-reduced-motion:reduce){.soundtrack.is-playing .soundtrack__toggle span,.soundtrack.is-loading .soundtrack__toggle{animation:none}}
+@media(prefers-reduced-motion:reduce){.soundtrack.is-loading .soundtrack__toggle{animation:none}.soundtrack__toggle{transition:none}.soundtrack__toggle:hover{transform:none}}
