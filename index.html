@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>William Wang — Portfolio</title>
+<link rel="stylesheet" href="soundtrack.css">
 
 <!-- About Room 用到的像素字 + 衬线字 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1917,6 +1918,7 @@ function show(id) {
   links.forEach(function (a) { a.classList.toggle('on', a.hash === '#' + id); });
   window.scrollTo(0, 0);
   if (window.__updateNav) window.__updateNav();
+  window.dispatchEvent(new CustomEvent('portfolio:page', { detail: id }));
 }
 
 show(location.hash.slice(1) || 'about');
@@ -2760,5 +2762,12 @@ window.addEventListener('hashchange', function () { transitionTo(location.hash.s
 </script>
 
 
+<aside class="soundtrack" id="soundtrack" aria-label="Page soundtrack">
+  <button class="soundtrack__toggle" id="soundToggle" type="button" aria-label="Play soundtrack" aria-pressed="false" title="Play music"><span aria-hidden="true">♫</span></button>
+  <a class="soundtrack__title" id="soundTitle" href="https://www.youtube.com/watch?v=1b2tW9JMSfQ&amp;t=202s" target="_blank" rel="noopener noreferrer">Strawberry Lemonade</a>
+  <p class="soundtrack__status" id="soundStatus" role="status" aria-live="polite">Sound off · tap the music button</p>
+  <div class="soundtrack__engine" id="soundVideoWrap" aria-hidden="true"><div id="soundVideo"></div></div>
+</aside>
+<script src="soundtrack.js"></script>
 </body>
 </html>
